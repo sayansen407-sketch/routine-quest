@@ -14,8 +14,9 @@
 
 <style>
   :root {
-    --bg: #070d19;
+    --bg-gradient: radial-gradient(circle at top, #1e293b, #070d19 80%);
     --card: rgba(17, 24, 39, 0.92);
+    --input-bg: #090e17;
     --border: rgba(56, 189, 248, 0.25);
     --primary: #38bdf8;
     --primary-glow: rgba(56, 189, 248, 0.4);
@@ -27,21 +28,74 @@
     --text: #f8fafc;
     --sub: #94a3b8;
   }
+
+  /* Themes */
+  body.theme-pitch-dark {
+    --bg-gradient: #000000;
+    --card: #0a0a0a;
+    --input-bg: #121212;
+    --border: #262626;
+    --primary: #e2e8f0;
+    --primary-glow: rgba(255,255,255,0.2);
+    --text: #ffffff;
+    --sub: #a1a1aa;
+  }
+  body.theme-light-white {
+    --bg-gradient: #f8fafc;
+    --card: #ffffff;
+    --input-bg: #f1f5f9;
+    --border: #cbd5e1;
+    --primary: #0284c7;
+    --primary-glow: rgba(2,132,199,0.2);
+    --text: #0f172a;
+    --sub: #64748b;
+  }
+  body.theme-crimson-red {
+    --bg-gradient: radial-gradient(circle at top, #3b0714, #0a0204 80%);
+    --card: #170408;
+    --input-bg: #0a0204;
+    --border: rgba(244,63,94,0.3);
+    --primary: #f43f5e;
+    --primary-glow: rgba(244,63,94,0.4);
+    --text: #fff1f2;
+    --sub: #fda4af;
+  }
+  body.theme-emerald-green {
+    --bg-gradient: radial-gradient(circle at top, #022c22, #02120e 80%);
+    --card: #041c16;
+    --input-bg: #02120e;
+    --border: rgba(16,185,129,0.3);
+    --primary: #10b981;
+    --primary-glow: rgba(16,185,129,0.4);
+    --text: #ecfdf5;
+    --sub: #6ee7b7;
+  }
+  body.theme-royal-purple {
+    --bg-gradient: radial-gradient(circle at top, #2e1065, #0f051d 80%);
+    --card: #170b2c;
+    --input-bg: #0f051d;
+    --border: rgba(168,85,247,0.3);
+    --primary: #a855f7;
+    --primary-glow: rgba(168,85,247,0.4);
+    --text: #faf5ff;
+    --sub: #d8b4fe;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: radial-gradient(circle at top, #1e293b, #070d19 80%); color: var(--text); padding: 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; }
+  body { background: var(--bg-gradient); color: var(--text); padding: 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; transition: background 0.3s; }
   
-  .auth-bar { display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.85); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+  .auth-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
   .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
   .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); }
   .auth-btn { background: var(--primary); color: #070d19; font-weight: 800; font-size: 0.8rem; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
   .logout-btn { background: rgba(244,63,94,0.2); color: var(--spend); border: 1px solid rgba(244,63,94,0.4); }
 
-  .bar { display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.8); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
   .bar select { background: transparent; border: none; color: var(--primary); font-size: 0.95rem; font-weight: bold; outline: none; cursor: pointer; }
   .plus-btn { background: var(--primary); color: #070d19; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; border: none; cursor: pointer; }
   
-  .card { background: var(--card); backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-  .wallet { text-align: center; position: relative; }
+  .card { background: var(--card); backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.5); position: relative; }
+  .wallet { text-align: center; }
   .badge-row { display: flex; justify-content: center; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
   .badge { font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #d97706, var(--gold)); padding: 4px 12px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
   .streak-badge { font-size: 0.8rem; background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
@@ -55,49 +109,60 @@
   .prog-fill { height: 100%; background: linear-gradient(90deg, #0284c7, var(--primary)); width: 0%; transition: width 0.4s ease; }
   .prog-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub); margin-top: 6px; }
   
-  .target-box { background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.15); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+  .target-box { background: rgba(15,23,42,0.5); padding: 8px 12px; border-radius: 10px; border: 1px dashed var(--border); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
   .target-box span b { color: var(--earn); }
-  .target-btn { background: rgba(56,189,248,0.2); border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+  .target-btn { background: rgba(56,189,248,0.15); border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
 
-  .nav { display: flex; gap: 5px; background: rgba(15,23,42,0.7); padding: 5px; border-radius: 12px; margin-bottom: 12px; overflow-x: auto; }
+  .nav { display: flex; gap: 5px; background: var(--card); padding: 5px; border-radius: 12px; margin-bottom: 12px; overflow-x: auto; border: 1px solid var(--border); }
   .nav button { flex: 1; padding: 9px 6px; background: transparent; color: var(--sub); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.78rem; white-space: nowrap; }
   .nav button.active { background: var(--primary); color: #070d19; }
   .tab { display: none; }
   .tab.active { display: block; }
   
-  h3 { font-size: 1.05rem; margin-bottom: 12px; }
+  /* Header with 3-Dots Menu */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .menu-btn { background: transparent; border: none; color: var(--primary); font-size: 1.3rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+  .dropdown-menu { display: none; position: absolute; right: 16px; top: 48px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 50; min-width: 180px; }
+  .dropdown-menu.show { display: flex; flex-direction: column; }
+  .dropdown-menu button { background: transparent; border: none; color: var(--text); padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .dropdown-menu button:hover { background: rgba(56,189,248,0.1); color: var(--primary); }
+
+  /* Modals */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
+  .modal-overlay.show { display: flex; }
+  .modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 18px; max-height: 85vh; overflow-y: auto; }
+
   form { display: flex; flex-direction: column; gap: 10px; }
-  input, select, textarea { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #090e17; color: #fff; font-size: 0.9rem; outline: none; }
+  input, select, textarea { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: var(--input-bg); color: var(--text); font-size: 0.9rem; outline: none; }
   .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; }
   
-  .chart-filter-bar { display: flex; gap: 6px; margin-bottom: 12px; background: #090e17; padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+  .chart-filter-bar { display: flex; gap: 6px; margin-bottom: 12px; background: var(--input-bg); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
   .chart-filter-btn { flex: 1; background: transparent; border: none; color: var(--sub); padding: 6px 0; font-size: 0.75rem; font-weight: 800; border-radius: 6px; cursor: pointer; text-align: center; }
   .chart-filter-btn.active { background: var(--primary); color: #070d19; }
   .chart-container { position: relative; width: 100%; height: 210px; margin-bottom: 16px; }
 
   .list { max-height: 280px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #090e17; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+  .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--input-bg); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
   .earn { color: var(--earn); font-weight: bold; }
   .spend { color: var(--spend); font-weight: bold; }
   .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--primary); margin-left: 6px; }
   .del { background: rgba(244,63,94,0.15); color: var(--spend); border: 1px solid rgba(244,63,94,0.3); padding: 5px 8px; border-radius: 6px; cursor: pointer; }
 
-  .summary-card { background: #090e17; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .summary-card { background: var(--input-bg); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
   .summary-header { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; margin-bottom: 8px; font-size: 0.85rem; }
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-size: 0.8rem; }
 
   .folder-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
-  .folder-tab { background: #090e17; border: 1px solid rgba(255,255,255,0.1); color: var(--sub); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+  .folder-tab { background: var(--input-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--sub); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
   .folder-tab.active { background: var(--primary); color: #070d19; font-weight: 800; }
-  .note-card { background: #090e17; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 12px; margin-bottom: 10px; position: relative; }
+  .note-card { background: var(--input-bg); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
   .note-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 6px; color: var(--primary); }
   .note-body { font-size: 0.85rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.4; }
   .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.7rem; color: var(--sub); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; }
 </style>
 </head>
 <body>
-
-<div class="auth-bar">
+  <div class="auth-bar">
   <div class="user-info" id="userInfo"><span>🔒 Guest (Offline)</span></div>
   <button class="auth-btn" id="authBtn" onclick="toggleAuth()">Sign in with Google</button>
 </div>
@@ -136,13 +201,24 @@
 
 <!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
-  <h3>Record Activity</h3>
+  <div class="section-header">
+    <h3>Record Activity</h3>
+    <button class="menu-btn" onclick="toggleActionMenu()">⋮</button>
+    <div class="dropdown-menu" id="actionMenu">
+      <button onclick="openManageModal()">📋 Manage & Delete Logs</button>
+      <button onclick="openThemeModal()">🎨 Change Theme</button>
+    </div>
+  </div>
+
   <form id="formLog">
+    <!-- Live Search Filter for Activities -->
+    <input type="text" id="actSearchInput" placeholder="🔍 Search activity (e.g. Work, Read)..." oninput="filterActivities()">
     <select id="selectAct" required></select>
     <input type="number" id="inputDuration" placeholder="Count / Duration (e.g. 1 or 30)" step="any" required>
     <button type="submit" class="btn">+ Add Record</button>
   </form>
-  <h3 style="margin-top:16px;">Recent Logs</h3>
+
+  <h3 style="margin-top:16px;">Recent Logs (Protected)</h3>
   <div class="list" id="listHistory"></div>
 </div>
 
@@ -244,6 +320,36 @@
   <h3 style="margin-top:16px;">Levels</h3>
   <div class="list" id="listLevels"></div>
 </div>
+
+<!-- Modal: Manage & Delete Logs (Safe Mode) -->
+<div class="modal-overlay" id="manageModal">
+  <div class="modal-content">
+    <div class="section-header">
+      <h3>Manage & Delete Records</h3>
+      <button class="menu-btn" onclick="closeManageModal()">✕</button>
+    </div>
+    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:12px;">Deleting an entry safely recalculates your Daily Target, Streak, and Charts.</p>
+    <div class="list" id="manageLogsList" style="max-height: 50vh;"></div>
+  </div>
+</div>
+
+<!-- Modal: Theme Selection -->
+<div class="modal-overlay" id="themeModal">
+  <div class="modal-content">
+    <div class="section-header">
+      <h3>Appearance & Theme</h3>
+      <button class="menu-btn" onclick="closeThemeModal()">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #38bdf8;" onclick="setAppTheme('default')">Cyber Midnight (Default)</button>
+      <button class="btn" style="background:#000000; color:#ffffff; border:1px solid #333;" onclick="setAppTheme('theme-pitch-dark')">Pure Pitch Dark (OLED)</button>
+      <button class="btn" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setAppTheme('theme-light-white')">Clean Minimal White</button>
+      <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #f43f5e;" onclick="setAppTheme('theme-crimson-red')">Crimson Blood Red</button>
+      <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #10b981;" onclick="setAppTheme('theme-emerald-green')">Emerald Forest Green</button>
+      <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #a855f7;" onclick="setAppTheme('theme-royal-purple')">Royal Luxury Purple</button>
+    </div>
+  </div>
+</div>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
@@ -268,6 +374,7 @@ let currentActiveFolder = "General";
 
 let store = JSON.parse(localStorage.getItem('rq_db')) || {
   active: "Default",
+  appTheme: "default",
   categories: ["General", "Study", "Fitness", "Work", "Distraction"],
   folders: ["General", "Ideas", "Finance"],
   notes: [],
@@ -296,6 +403,7 @@ let store = JSON.parse(localStorage.getItem('rq_db')) || {
 if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
 if (!store.folders) store.folders = ["General", "Ideas", "Finance"];
 if (!store.notes) store.notes = [];
+if (!store.appTheme) store.appTheme = "default";
 
 function getCur() { 
   if (!store.profiles[store.active]) {
@@ -306,6 +414,45 @@ function getCur() {
   if (!cur.streakHistory) cur.streakHistory = {};
   return cur;
 }
+
+function applyStoredTheme() {
+  document.body.className = '';
+  if (store.appTheme && store.appTheme !== 'default') {
+    document.body.classList.add(store.appTheme);
+  }
+}
+
+function setAppTheme(themeName) {
+  store.appTheme = themeName;
+  applyStoredTheme();
+  persist();
+  closeThemeModal();
+}
+
+function toggleActionMenu() {
+  const menu = document.getElementById('actionMenu');
+  menu.classList.toggle('show');
+}
+
+window.addEventListener('click', (e) => {
+  if (!e.target.matches('.menu-btn')) {
+    const m = document.getElementById('actionMenu');
+    if (m && m.classList.contains('show')) m.classList.remove('show');
+  }
+});
+
+function openManageModal() {
+  toggleActionMenu();
+  renderManageModalLogs();
+  document.getElementById('manageModal').classList.add('show');
+}
+function closeManageModal() { document.getElementById('manageModal').classList.remove('show'); }
+
+function openThemeModal() {
+  toggleActionMenu();
+  document.getElementById('themeModal').classList.add('show');
+}
+function closeThemeModal() { document.getElementById('themeModal').classList.remove('show'); }
 
 function getIndianDateTime() {
   const now = new Date();
@@ -343,6 +490,32 @@ function checkAndUpdateStreakOnEarn() {
       cur.lastActiveDate = todayIso;
     }
     cur.streakHistory[todayIso] = cur.streak;
+  }
+}
+
+// Complete Recalculation on Activity Deletion
+function recalculateStreakAfterDeletion(deletedDateOnly, deletedIsoDate) {
+  const cur = getCur();
+  const dateIso = deletedIsoDate || getIndianDateTime().isoDate;
+  const dateOnly = deletedDateOnly || getIndianDateTime().dateOnly;
+
+  const dayEarned = (cur.logs || [])
+    .filter(l => (l.dateOnly === dateOnly || l.isoDate === dateIso) && l.type === 'Earn')
+    .reduce((sum, l) => sum + l.amt, 0);
+
+  if (dayEarned < cur.dailyTarget) {
+    delete cur.streakHistory[dateIso];
+    if (cur.lastActiveDate === dateIso) {
+      const remainingDates = Object.keys(cur.streakHistory).sort();
+      if (remainingDates.length > 0) {
+        const prevDate = remainingDates[remainingDates.length - 1];
+        cur.lastActiveDate = prevDate;
+        cur.streak = cur.streakHistory[prevDate] || 0;
+      } else {
+        cur.lastActiveDate = "";
+        cur.streak = 0;
+      }
+    }
   }
 }
 
@@ -403,6 +576,7 @@ auth.onAuthStateChanged(async (user) => {
         if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
         if (!store.folders) store.folders = ["General", "Ideas", "Finance"];
         if (!store.notes) store.notes = [];
+        if (!store.appTheme) store.appTheme = "default";
         localStorage.setItem('rq_db', JSON.stringify(store));
       } else {
         await db.collection("users").doc(user.uid).set(store);
@@ -415,6 +589,7 @@ auth.onAuthStateChanged(async (user) => {
     btn.innerText = "Sign in with Google";
     btn.classList.remove("logout-btn");
   }
+  applyStoredTheme();
   updateUI();
 });
 
@@ -492,8 +667,10 @@ document.getElementById('formNote').onsubmit = (e) => {
 };
 
 function delNote(id) {
-  store.notes = store.notes.filter(n => n.id !== id);
-  persist();
+  if (confirm("Delete this note?")) {
+    store.notes = store.notes.filter(n => n.id !== id);
+    persist();
+  }
 }
 
 function renderNotes() {
@@ -537,6 +714,20 @@ function delCategory(idx) {
   if (store.categories.length <= 1) return alert("At least one category is required!");
   store.categories.splice(idx, 1);
   persist();
+}
+
+function filterActivities() {
+  const query = (document.getElementById('actSearchInput').value || '').toLowerCase().trim();
+  const cur = getCur();
+  const select = document.getElementById('selectAct');
+
+  const filtered = cur.acts.filter(a => 
+    a.name.toLowerCase().includes(query) || 
+    (a.category && a.category.toLowerCase().includes(query))
+  );
+
+  select.innerHTML = filtered.length === 0 ? '<option value="">No matching activity found</option>' :
+    filtered.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>`).join('');
 }
 
 function setChartFilter(filter, btn) {
@@ -702,6 +893,52 @@ function renderDailyReports(logs) {
   }).join('');
 }
 
+function renderManageModalLogs() {
+  const cur = getCur();
+  const list = document.getElementById('manageLogsList');
+  if (cur.logs.length === 0) {
+    list.innerHTML = '<p style="color:var(--sub);font-size:0.85rem;text-align:center;">No records to manage.</p>';
+    return;
+  }
+
+  list.innerHTML = cur.logs.map((h, i) => `
+    <div class="item">
+      <div>
+        <strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span>
+        <small style="color:var(--sub); font-size:0.75rem;"> (${h.qty} ${h.unit})</small>
+        <div style="font-size:0.7rem; color:var(--sub); margin-top:2px;">🕒 ${h.timeString || h.dateOnly || 'Earlier'}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="${h.type==='Earn'?'earn':'spend'}">${h.type==='Earn'?'+':'-'}₹${h.amt.toFixed(2)}</span>
+        <button class="del" onclick="confirmDeleteLog(${i})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function confirmDeleteLog(i) {
+  const ok = confirm("Are you sure you want to delete this activity?\n\nThis will safely update your Net Balance, Streak progress, and Charts.");
+  if (!ok) return;
+
+  let cur = getCur();
+  let item = cur.logs[i];
+
+  if (item.type === 'Earn') cur.balance -= item.amt; 
+  else cur.balance += item.amt;
+
+  const deletedDateOnly = item.dateOnly;
+  const deletedIsoDate = item.isoDate;
+
+  cur.logs.splice(i, 1);
+
+  if (item.type === 'Earn') {
+    recalculateStreakAfterDeletion(deletedDateOnly, deletedIsoDate);
+  }
+
+  persist();
+  renderManageModalLogs();
+}
+
 function updateUI() {
   const cur = getCur();
   
@@ -715,7 +952,7 @@ function updateUI() {
   const rankElem = document.getElementById('rankBadge');
   if (rankInfo) {
     rankElem.style.display = "inline-block";
-    rankElem.innerText = rankInfo.text;
+      rankElem.innerText = rankInfo.text;
     rankElem.className = `rank-badge ${rankInfo.cls}`;
   } else {
     rankElem.style.display = "none";
@@ -732,12 +969,12 @@ function updateUI() {
   document.getElementById('progressFill').style.width = `${pct}%`;
   document.getElementById('progressText').innerText = `${cur.balance.toFixed(0)} / ${currentLvl.target}`;
 
-  document.getElementById('selectAct').innerHTML = cur.acts.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>`).join('');
+  filterActivities();
 
   document.getElementById('rateCategorySelect').innerHTML = store.categories.map(c => `<option value="${c}">${c}</option>`).join('');
 
   document.getElementById('listHistory').innerHTML = cur.logs.length === 0 ? '<p style="color:var(--sub);font-size:0.8rem;">No records yet.</p>' :
-    cur.logs.map((h, i) => `
+    cur.logs.slice(0, 15).map(h => `
       <div class="item">
         <div>
           <strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span>
@@ -746,7 +983,6 @@ function updateUI() {
         </div>
         <div>
           <span class="${h.type==='Earn'?'earn':'spend'}">${h.type==='Earn'?'+':'-'}₹${h.amt.toFixed(2)}</span>
-          <button class="del" onclick="delLog(${i})">✕</button>
         </div>
       </div>`).join('');
 
@@ -777,6 +1013,7 @@ document.getElementById('formLog').onsubmit = (e) => {
   e.preventDefault();
   let cur = getCur();
   let id = parseInt(document.getElementById('selectAct').value);
+  if (!id) return alert("Please select an activity!");
   let qty = parseFloat(document.getElementById('inputDuration').value);
   let act = cur.acts.find(a => a.id === id);
   let total = act.rate * qty;
@@ -795,7 +1032,8 @@ document.getElementById('formLog').onsubmit = (e) => {
     unit: act.unit,
     timestamp: Date.now(),
     dateOnly: ist.dateOnly,
-    timeString: ist.timeString
+    timeString: ist.timeString,
+    isoDate: ist.isoDate
   });
 
   if (act.type === 'Earn') checkAndUpdateStreakOnEarn();
@@ -831,14 +1069,6 @@ document.getElementById('formLevel').onsubmit = (e) => {
   document.getElementById('formLevel').reset();
 };
 
-function delLog(i) {
-  let cur = getCur();
-  let item = cur.logs[i];
-  if (item.type === 'Earn') cur.balance -= item.amt; else cur.balance += item.amt;
-  cur.logs.splice(i, 1);
-  persist();
-}
-
 function delRate(i) {
   let cur = getCur();
   if (cur.acts.length <= 1) return alert("Must keep at least 1 rate!");
@@ -853,6 +1083,7 @@ function delLvl(i) {
   persist();
 }
 
+applyStoredTheme();
 updateUI();
 </script>
 </body>
