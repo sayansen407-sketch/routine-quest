@@ -10,91 +10,116 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
-    --bg: radial-gradient(circle at top, #1e293b, #070d19 80%);
-    --card: rgba(17, 24, 39, 0.95);
-    --input: #090e17;
-    --border: rgba(56, 189, 248, 0.25);
+    --bg: radial-gradient(circle at 50% -10%, #1e293b 0%, #030712 85%);
+    --card: rgba(17, 24, 39, 0.78);
+    --input: rgba(10, 15, 26, 0.85);
+    --border: rgba(56, 189, 248, 0.24);
+    --border-glow: rgba(56, 189, 248, 0.45);
     --primary: #38bdf8;
+    --primary-glow: rgba(56, 189, 248, 0.6);
     --earn: #10b981;
     --spend: #f43f5e;
     --gold: #fbbf24;
-    --silver: #94a3b8;
-    --bronze: #d97706;
+    --silver: #cbd5e1;
+    --bronze: #f59e0b;
     --text: #f8fafc;
     --sub: #94a3b8;
   }
-  body.theme-pitch-dark { --bg: #000; --card: #0a0a0a; --input: #141414; --border: #262626; --primary: #fff; --text: #fff; --sub: #888; }
-  body.theme-slate-grey { --bg: #1e293b; --card: #0f172a; --input: #0b1120; --border: #334155; --primary: #94a3b8; --text: #f1f5f9; --sub: #94a3b8; }
-  body.theme-light-white { --bg: #f8fafc; --card: #fff; --input: #f1f5f9; --border: #cbd5e1; --primary: #0284c7; --text: #0f172a; --sub: #64748b; }
-  body.theme-warm-paper { --bg: #faf7f2; --card: #fff; --input: #f5efe6; --border: #e2d9cc; --primary: #b45309; --text: #292524; --sub: #78716c; }
-  body.theme-ice-silver { --bg: #eef2f6; --card: #fff; --input: #e2e8f0; --border: #cbd5e1; --primary: #475569; --text: #1e293b; --sub: #64748b; }
-  body.theme-crimson-red { --bg: radial-gradient(circle at top, #3b0714, #0a0204 80%); --card: #170408; --input: #0a0204; --border: rgba(244,63,94,0.3); --primary: #f43f5e; --text: #fff1f2; --sub: #fda4af; }
-  body.theme-emerald-green { --bg: radial-gradient(circle at top, #022c22, #02120e 80%); --card: #041c16; --input: #02120e; --border: rgba(16,185,129,0.3); --primary: #10b981; --text: #ecfdf5; --sub: #6ee7b7; }
-  body.theme-royal-purple { --bg: radial-gradient(circle at top, #2e1065, #0f051d 80%); --card: #170b2c; --input: #0f051d; --border: rgba(168,85,247,0.3); --primary: #a855f7; --text: #faf5ff; --sub: #d8b4fe; }
-  body.theme-sunset-gold { --bg: radial-gradient(circle at top, #451a03, #0c0401 80%); --card: #1c0a02; --input: #0c0401; --border: rgba(245,158,11,0.35); --primary: #f59e0b; --text: #fffbeb; --sub: #fcd34d; }
-  body.theme-deep-teal { --bg: radial-gradient(circle at top, #042f2e, #021414 80%); --card: #051d1d; --input: #021414; --border: rgba(20,184,166,0.35); --primary: #14b8a6; --text: #f0fdfa; --sub: #5eead4; }
+  body.theme-pitch-dark { --bg: #000; --card: rgba(12,12,12,0.92); --input: #0a0a0a; --border: #262626; --border-glow: rgba(255,255,255,0.18); --primary: #f8fafc; --primary-glow: rgba(255,255,255,0.35); --text: #fff; --sub: #71717a; }
+  body.theme-slate-grey { --bg: radial-gradient(circle at 50% 0%, #334155, #0f172a 85%); --card: rgba(30,41,59,0.8); --input: #0b1120; --border: #475569; --border-glow: rgba(148,163,184,0.35); --primary: #94a3b8; --primary-glow: rgba(148,163,184,0.45); --text: #f1f5f9; --sub: #94a3b8; }
+  body.theme-light-white { --bg: radial-gradient(circle at 50% 0%, #f1f5f9, #e2e8f0 85%); --card: rgba(255,255,255,0.92); --input: #f8fafc; --border: #cbd5e1; --border-glow: rgba(2,132,199,0.3); --primary: #0284c7; --primary-glow: rgba(2,132,199,0.4); --text: #0f172a; --sub: #64748b; }
+  body.theme-warm-paper { --bg: radial-gradient(circle at 50% 0%, #fefae0, #faedcd 85%); --card: rgba(255,255,255,0.92); --input: #fdfaf6; --border: #d4a373; --border-glow: rgba(180,83,9,0.3); --primary: #b45309; --primary-glow: rgba(180,83,9,0.4); --text: #292524; --sub: #78716c; }
+  body.theme-ice-silver { --bg: radial-gradient(circle at 50% 0%, #f8fafc, #e2e8f0 85%); --card: rgba(255,255,255,0.9); --input: #f1f5f9; --border: #94a3b8; --border-glow: rgba(71,85,105,0.3); --primary: #475569; --primary-glow: rgba(71,85,105,0.4); --text: #1e293b; --sub: #64748b; }
+  body.theme-crimson-red { --bg: radial-gradient(circle at 50% -10%, #58061d 0%, #080103 85%); --card: rgba(26,4,10,0.85); --input: #0d0104; --border: rgba(244,63,94,0.35); --border-glow: rgba(244,63,94,0.55); --primary: #f43f5e; --primary-glow: rgba(244,63,94,0.65); --text: #fff1f2; --sub: #fda4af; }
+  body.theme-emerald-green { --bg: radial-gradient(circle at 50% -10%, #064e3b 0%, #01140e 85%); --card: rgba(4,28,22,0.85); --input: #02140e; --border: rgba(16,185,129,0.35); --border-glow: rgba(16,185,129,0.55); --primary: #10b981; --primary-glow: rgba(16,185,129,0.65); --text: #ecfdf5; --sub: #6ee7b7; }
+  body.theme-royal-purple { --bg: radial-gradient(circle at 50% -10%, #4a044e 0%, #090111 85%); --card: rgba(24,7,40,0.85); --input: #0f051d; --border: rgba(168,85,247,0.35); --border-glow: rgba(168,85,247,0.55); --primary: #a855f7; --primary-glow: rgba(168,85,247,0.65); --text: #faf5ff; --sub: #d8b4fe; }
+  body.theme-sunset-gold { --bg: radial-gradient(circle at 50% -10%, #78350f 0%, #0c0401 85%); --card: rgba(28,10,2,0.85); --input: #0c0401; --border: rgba(245,158,11,0.4); --border-glow: rgba(245,158,11,0.6); --primary: #f59e0b; --primary-glow: rgba(245,158,11,0.65); --text: #fffbeb; --sub: #fcd34d; }
+  body.theme-deep-teal { --bg: radial-gradient(circle at 50% -10%, #134e4a 0%, #011717 85%); --card: rgba(5,29,29,0.85); --input: #02140e; --border: rgba(20,184,166,0.4); --border-glow: rgba(20,184,166,0.6); --primary: #14b8a6; --primary-glow: rgba(20,184,166,0.65); --text: #f0fdfa; --sub: #5eead4; }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 12px; max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; }
-  .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; position: relative; }
-  .menu-btn { background: var(--card); border: 1px solid var(--border); color: var(--primary); font-size: 1.2rem; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .menu-dropdown { display: none; position: absolute; left: 0; top: 42px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); z-index: 60; min-width: 190px; flex-direction: column; }
-  .menu-dropdown.show { display: flex; }
-  .menu-dropdown button { background: transparent; border: none; color: var(--text); padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .auth-box { flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); }
-  .user-info { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
-  .user-avatar { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--primary); }
-  .auth-btn { background: var(--primary); color: #000; font-weight: 800; font-size: 0.75rem; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
-  .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
-  .bar select { background: transparent; border: none; color: var(--primary); font-size: 0.9rem; font-weight: bold; outline: none; }
-  .plus-btn { background: var(--primary); color: #000; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; border: none; cursor: pointer; }
-  .card { background: var(--card); padding: 14px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
-  .wallet { text-align: center; }
-  .badge-row { display: flex; justify-content: center; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
-  .badge { font-size: 0.75rem; color: #000; background: linear-gradient(135deg, #d97706, var(--gold)); padding: 3px 10px; border-radius: 20px; font-weight: 800; }
-  .streak-badge { font-size: 0.75rem; background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #f59e0b; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
-  .rank-badge { font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; font-weight: 900; }
-  .rank-1 { background: var(--gold); color: #000; }
-  .rank-2 { background: var(--silver); color: #000; }
-  .rank-3 { background: var(--bronze); color: #fff; }
-  .balance { font-size: 2.3rem; font-weight: 900; margin-bottom: 6px; }
-  .prog-bg { width: 100%; height: 7px; background: #0f172a; border-radius: 20px; overflow: hidden; }
-  .prog-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-  .target-box { background: rgba(15,23,42,0.5); padding: 6px 10px; border-radius: 8px; border: 1px dashed var(--border); margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; }
-  .target-btn { background: rgba(56,189,248,0.15); border: 1px solid var(--primary); color: var(--primary); padding: 3px 6px; border-radius: 5px; font-size: 0.72rem; cursor: pointer; font-weight: bold; }
-  .nav { display: flex; gap: 4px; background: var(--card); padding: 4px; border-radius: 10px; margin-bottom: 10px; overflow-x: auto; border: 1px solid var(--border); }
-  .nav button { flex: 1; padding: 8px 4px; background: transparent; color: var(--sub); border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem; white-space: nowrap; }
-  .nav button.active { background: var(--primary); color: #000; }
+  body { background: var(--bg); color: var(--text); padding: 16px 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; transition: all 0.35s ease; letter-spacing: -0.2px; }
+
+  .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; position: relative; }
+  .menu-btn { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); color: var(--primary); font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: transform 0.15s, border-color 0.2s; }
+  .menu-btn:active { transform: scale(0.92); border-color: var(--primary); }
+  
+  .menu-dropdown { display: none; position: absolute; left: 0; top: 48px; background: var(--card); backdrop-filter: blur(24px); border: 1px solid var(--border-glow); border-radius: 14px; box-shadow: 0 16px 36px rgba(0,0,0,0.88); z-index: 60; min-width: 220px; flex-direction: column; overflow: hidden; }
+  .menu-dropdown.show { display: flex; animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .menu-dropdown button { background: transparent; border: none; color: var(--text); padding: 12px 16px; text-align: left; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s; }
+  .menu-dropdown button:hover { background: rgba(56,189,248,0.12); color: var(--primary); }
+
+  .auth-box { flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--card); backdrop-filter: blur(20px); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+  .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
+  .user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+  .auth-btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; font-size: 0.75rem; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 10px var(--primary-glow); }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); backdrop-filter: blur(20px); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+  .bar select { background: transparent; border: none; color: var(--primary); font-size: 0.95rem; font-weight: 800; outline: none; cursor: pointer; }
+  .plus-btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; width: 32px; height: 32px; border-radius: 50%; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 0 12px var(--primary-glow); transition: transform 0.15s; }
+  .plus-btn:active { transform: scale(0.92); }
+
+  .card { background: var(--card); backdrop-filter: blur(22px); padding: 18px; border-radius: 18px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(0,0,0,0.45); position: relative; }
+  .wallet { text-align: center; border-color: var(--border-glow); box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 0 24px rgba(56,189,248,0.08); }
+  .badge-row { display: flex; justify-content: center; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .badge { font-size: 0.78rem; color: #000; background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 4px 12px; border-radius: 20px; font-weight: 900; box-shadow: 0 0 14px rgba(251,191,36,0.45); text-transform: uppercase; }
+  .streak-badge { font-size: 0.78rem; background: rgba(245,158,11,0.18); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 11px; border-radius: 20px; font-weight: 800; box-shadow: 0 0 12px rgba(245,158,11,0.25); }
+  .rank-badge { font-size: 0.75rem; padding: 3px 9px; border-radius: 12px; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #e2e8f0); color: #000; }
+  .rank-3 { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; }
+
+  .balance { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; text-shadow: 0 0 24px var(--primary-glow); margin: 4px 0 8px; }
+  .prog-bg { width: 100%; height: 9px; background: rgba(15,23,42,0.85); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); }
+  .prog-fill { height: 100%; background: linear-gradient(90deg, #0284c7, var(--primary)); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 12px var(--primary-glow); }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub); margin-top: 6px; font-weight: 700; }
+
+  .target-box { background: rgba(15,23,42,0.55); backdrop-filter: blur(12px); padding: 9px 12px; border-radius: 11px; border: 1px dashed var(--border); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+  .target-btn { background: rgba(56,189,248,0.18); border: 1px solid var(--primary); color: var(--primary); padding: 4px 9px; border-radius: 7px; font-size: 0.75rem; cursor: pointer; font-weight: 800; transition: transform 0.1s; }
+  .target-btn:active { transform: scale(0.95); }
+
+  .nav { display: flex; gap: 5px; background: var(--card); backdrop-filter: blur(20px); padding: 6px; border-radius: 14px; margin-bottom: 14px; overflow-x: auto; border: 1px solid var(--border); }
+  .nav button { flex: 1; padding: 9px 6px; background: transparent; color: var(--sub); border: none; border-radius: 9px; font-weight: 800; cursor: pointer; font-size: 0.78rem; white-space: nowrap; transition: all 0.2s; }
+  .nav button.active { background: var(--primary); color: #070d19; box-shadow: 0 2px 12px var(--primary-glow); }
+
   .tab { display: none; }
-  .tab.active { display: block; }
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; padding: 14px; }
+  .tab.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
   .modal.show { display: flex; }
-  .modal-body { background: var(--card); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 420px; padding: 14px; max-height: 80vh; overflow-y: auto; }
-  form { display: flex; flex-direction: column; gap: 8px; }
-  input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--input); color: var(--text); font-size: 0.85rem; outline: none; }
-  .btn { padding: 10px; background: var(--primary); color: #000; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
-  .filter-bar { display: flex; gap: 4px; margin-bottom: 10px; background: var(--input); padding: 3px; border-radius: 6px; }
-  .filter-btn { flex: 1; background: transparent; border: none; color: var(--sub); padding: 5px 0; font-size: 0.72rem; font-weight: 800; cursor: pointer; border-radius: 4px; }
-  .filter-btn.active { background: var(--primary); color: #000; }
-  .chart-box { position: relative; width: 100%; height: 180px; margin-bottom: 12px; }
-  .list { max-height: 250px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--input); border-radius: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05); }
-  .earn { color: var(--earn); font-weight: bold; }
-  .spend { color: var(--spend); font-weight: bold; }
-  .tag { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--primary); margin-left: 4px; }
-  .del { background: rgba(244,63,94,0.15); color: var(--spend); border: 1px solid rgba(244,63,94,0.3); padding: 4px 6px; border-radius: 5px; cursor: pointer; font-size: 0.75rem; }
-  .folder-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; }
-  .folder-btn { background: var(--input); border: 1px solid var(--border); color: var(--sub); padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
-  .folder-btn.active { background: var(--primary); color: #000; font-weight: bold; }
+  .modal-body { background: var(--card); border: 1px solid var(--border-glow); border-radius: 18px; width: 100%; max-width: 440px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 48px rgba(0,0,0,0.92); }
+
+  form { display: flex; flex-direction: column; gap: 10px; }
+  input, select, textarea { width: 100%; padding: 12px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.1); background: var(--input); color: var(--text); font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
+  .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 11px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 16px var(--primary-glow); transition: transform 0.15s; }
+  .btn:active { transform: scale(0.97); }
+
+  .filter-bar { display: flex; gap: 5px; margin-bottom: 12px; background: var(--input); padding: 4px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.06); }
+  .filter-btn { flex: 1; background: transparent; border: none; color: var(--sub); padding: 6px 0; font-size: 0.75rem; font-weight: 800; cursor: pointer; border-radius: 7px; }
+  .filter-btn.active { background: var(--primary); color: #070d19; box-shadow: 0 2px 10px var(--primary-glow); }
+
+  .chart-box { position: relative; width: 100%; height: 195px; margin-bottom: 14px; }
+  .list { max-height: 280px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .item { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--input); border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+  .earn { color: var(--earn); font-weight: 900; text-shadow: 0 0 10px rgba(16,185,129,0.35); }
+  .spend { color: var(--spend); font-weight: 900; text-shadow: 0 0 10px rgba(244,63,94,0.35); }
+  .tag { font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; background: rgba(56,189,248,0.18); color: var(--primary); margin-left: 6px; font-weight: 800; border: 1px solid rgba(56,189,248,0.3); }
+  .del { background: rgba(244,63,94,0.18); color: var(--spend); border: 1px solid rgba(244,63,94,0.4); padding: 5px 9px; border-radius: 7px; cursor: pointer; font-size: 0.75rem; font-weight: 800; }
+
+  .folder-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+  .folder-btn { background: var(--input); border: 1px solid var(--border); color: var(--sub); padding: 6px 13px; border-radius: 9px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-weight: 800; }
+  .folder-btn.active { background: var(--primary); color: #070d19; box-shadow: 0 2px 12px var(--primary-glow); }
 </style>
 </head>
 <body>
 
 <div class="top-header">
-  <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+  <button class="menu-btn" onclick="toggleMenu()" title="Options">⋮</button>
   <div class="menu-dropdown" id="menuDropdown">
     <button onclick="openModal('manageModal')">📋 Manage & Delete Logs</button>
-    <button onclick="openModal('themeModal')">🎨 Change Theme</button>
+    <button onclick="openModal('themeModal')">🎨 Appearance & Themes</button>
   </div>
   <div class="auth-box">
     <div class="user-info" id="userInfo"><span>🔒 Guest</span></div>
@@ -113,12 +138,13 @@
     <span class="streak-badge" id="streakBadge">🔥 0 Days</span>
     <span class="rank-badge" id="rankBadge" style="display:none;"></span>
   </div>
-  <div style="font-size:0.7rem; color:var(--sub); text-transform:uppercase;">Net Balance</div>
+  <div style="font-size:0.75rem; color:var(--sub); text-transform:uppercase; letter-spacing:1px; font-weight:800;">Net Balance</div>
   <div class="balance" id="walletBalance">₹ 0.00</div>
   <div class="prog-bg"><div class="prog-fill" id="progressFill"></div></div>
+  <div class="prog-meta"><span>XP Progression</span><span id="progressText">0 / 500</span></div>
   <div class="target-box">
-    <span>Target: <b id="dailyTargetDisplay" style="color:var(--earn);">₹100</b> | Today: <b id="todayEarnedDisplay">₹0</b></span>
-    <button class="target-btn" onclick="changeDailyTarget()">Edit</button>
+    <span>Daily Target: <b id="dailyTargetDisplay" style="color:var(--earn);">₹100</b> | Today: <b id="todayEarnedDisplay">₹0</b></span>
+    <button class="target-btn" onclick="changeDailyTarget()">Edit Target</button>
   </div>
 </div>
 
@@ -132,17 +158,19 @@
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
 
+<!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
   <form id="formLog">
-    <input type="text" id="actSearchInput" placeholder="🔍 Search activity..." oninput="filterActivities()">
+    <input type="text" id="actSearchInput" placeholder="🔍 Search activity (e.g. Work, Gym)..." oninput="filterActivities()">
     <select id="selectAct" required></select>
-    <input type="number" id="inputDuration" placeholder="Count / Duration" step="any" required>
+    <input type="number" id="inputDuration" placeholder="Count / Duration (e.g. 1 or 30)" step="any" required>
     <button type="submit" class="btn">+ Add Record</button>
   </form>
-  <h4 style="margin-top:12px; font-size:0.85rem;">Recent Logs (Protected)</h4>
+  <h4 style="margin-top:14px; font-size:0.88rem; color:var(--sub);">Recent Logs (Protected)</h4>
   <div class="list" id="listHistory"></div>
 </div>
 
+<!-- Tab 2: Charts -->
 <div id="tabCharts" class="tab card">
   <div class="filter-bar">
     <button class="filter-btn" onclick="setChartFilter('1D', this)">1D</button>
@@ -152,62 +180,67 @@
     <button class="filter-btn" onclick="setChartFilter('ALL', this)">ALL</button>
   </div>
   <div class="chart-box"><canvas id="trendChart"></canvas></div>
-  <h4 style="font-size:0.8rem; margin:8px 0 4px;">🔥 Streak Consistency</h4>
-  <div class="chart-box" style="height:140px;"><canvas id="streakChart"></canvas></div>
-  <h4 style="font-size:0.8rem; margin:8px 0 4px;">Category Breakdown</h4>
-  <div class="chart-box" style="height:140px;"><canvas id="categoryChart"></canvas></div>
+  <h4 style="font-size:0.85rem; margin:10px 0 6px; color:var(--gold);">🔥 Streak & Consistency Trend</h4>
+  <div class="chart-box" style="height:150px;"><canvas id="streakChart"></canvas></div>
+  <h4 style="font-size:0.85rem; margin:10px 0 6px; color:var(--primary);">Category Breakdown</h4>
+  <div class="chart-box" style="height:150px;"><canvas id="categoryChart"></canvas></div>
 </div>
 
+<!-- Tab 3: Report -->
 <div id="tabReport" class="tab card">
-  <h4 style="margin-bottom:8px; font-size:0.85rem;">Daily Performance Summary</h4>
+  <h4 style="margin-bottom:10px; font-size:0.9rem;">Daily Performance Summary</h4>
   <div id="reportList" class="list"></div>
 </div>
 
+<!-- Tab 4: Notes -->
 <div id="tabNotes" class="tab card">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-    <h4 style="font-size:0.85rem;">Folders & Notes</h4>
-    <button class="target-btn" onclick="createFolder()">+ Folder</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <h4 style="font-size:0.9rem;">Folders & Notes</h4>
+    <button class="target-btn" onclick="createFolder()">+ New Folder</button>
   </div>
   <div class="folder-nav" id="folderList"></div>
-  <form id="formNote" style="margin-bottom:10px;">
-    <input type="text" id="noteTitle" placeholder="Title" required>
-    <textarea id="noteContent" rows="2" placeholder="Write note..." required></textarea>
+  <form id="formNote" style="margin-bottom:12px;">
+    <input type="text" id="noteTitle" placeholder="Note Title" required>
+    <textarea id="noteContent" rows="3" placeholder="Write unlimited notes here..." required></textarea>
     <button type="submit" class="btn">+ Save Note</button>
   </form>
   <div id="notesContainer" class="list"></div>
 </div>
 
+<!-- Tab 5: Categories -->
 <div id="tabCategories" class="tab card">
   <form id="formCategory">
-    <input type="text" id="catInput" placeholder="Category Name" required>
+    <input type="text" id="catInput" placeholder="Category Name (e.g. Study, Gym, Work)" required>
     <button type="submit" class="btn">+ Add Category</button>
   </form>
   <div class="list" id="listCategories"></div>
 </div>
 
+<!-- Tab 6: Rates -->
 <div id="tabRates" class="tab card">
   <form id="formRate">
     <input type="text" id="rateName" placeholder="Activity Name" required>
     <select id="rateCategorySelect"></select>
-    <div style="display:flex; gap:6px;">
+    <div style="display:flex; gap:8px;">
       <select id="rateType"><option value="Earn">Earn (+)</option><option value="Spend">Spend (-)</option></select>
       <input type="number" id="rateVal" placeholder="₹ Rate" step="any" required>
     </div>
     <select id="rateUnit">
-      <option value="Task">Per Task</option>
-      <option value="1 Min">Per Min</option>
-      <option value="1 Hr">Per Hour</option>
+      <option value="Task">Per 1 Task</option>
+      <option value="1 Min">Per 1 Minute</option>
+      <option value="1 Hr">Per 1 Hour</option>
     </select>
     <button type="submit" class="btn">Save Rate</button>
   </form>
   <div class="list" id="listRates"></div>
 </div>
 
+<!-- Tab 7: Levels -->
 <div id="tabLevels" class="tab card">
   <form id="formLevel">
-    <div style="display:flex; gap:6px;">
-      <input type="number" id="lvlNum" placeholder="Lvl #" required>
-      <input type="number" id="lvlTgt" placeholder="Target ₹" required>
+    <div style="display:flex; gap:8px;">
+      <input type="number" id="lvlNum" placeholder="Lvl #" required style="flex:1;">
+      <input type="number" id="lvlTgt" placeholder="Target ₹" required style="flex:2;">
     </div>
     <input type="text" id="lvlTitle" placeholder="Badge Title" required>
     <button type="submit" class="btn">Save Level</button>
@@ -215,34 +248,36 @@
   <div class="list" id="listLevels"></div>
 </div>
 
+<!-- Modals -->
 <div class="modal" id="manageModal">
   <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h4>Manage & Delete Logs</h4>
       <button class="target-btn" onclick="closeModal('manageModal')">✕</button>
     </div>
+    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:10px;">Safe Delete: Recalculates Net Balance, Streak progress, and Charts automatically.</p>
     <div class="list" id="manageLogsList"></div>
   </div>
 </div>
 
 <div class="modal" id="themeModal">
   <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h4>Appearance & Themes</h4>
       <button class="target-btn" onclick="closeModal('themeModal')">✕</button>
     </div>
-    <div style="display:flex; flex-direction:column; gap:6px;">
+    <div style="display:flex; flex-direction:column; gap:8px;">
       <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #38bdf8;" onclick="setTheme('default')">Cyber Midnight (Default)</button>
       <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-pitch-dark')">Pitch Dark (OLED)</button>
-      <button class="btn" style="background:#1e293b; color:#94a3b8;" onclick="setTheme('theme-slate-grey')">Slate Grey</button>
-      <button class="btn" style="background:#fff; color:#000;" onclick="setTheme('theme-light-white')">Minimal White</button>
-      <button class="btn" style="background:#faf7f2; color:#292524;" onclick="setTheme('theme-warm-paper')">Warm Paper</button>
-      <button class="btn" style="background:#eef2f6; color:#1e293b;" onclick="setTheme('theme-ice-silver')">Ice Silver</button>
-      <button class="btn" style="background:#170408; color:#f43f5e;" onclick="setTheme('theme-crimson-red')">Crimson Red</button>
-      <button class="btn" style="background:#041c16; color:#10b981;" onclick="setTheme('theme-emerald-green')">Emerald Green</button>
-      <button class="btn" style="background:#170b2c; color:#a855f7;" onclick="setTheme('theme-royal-purple')">Royal Purple</button>
-      <button class="btn" style="background:#1c0a02; color:#f59e0b;" onclick="setTheme('theme-sunset-gold')">Sunset Gold</button>
-      <button class="btn" style="background:#051d1d; color:#14b8a6;" onclick="setTheme('theme-deep-teal')">Deep Teal</button>
+      <button class="btn" style="background:#1e293b; color:#94a3b8;" onclick="setTheme('theme-slate-grey')">Deep Slate Grey</button>
+      <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light-white')">Minimal White</button>
+      <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e2d9cc;" onclick="setTheme('theme-warm-paper')">Warm Paper Cream</button>
+      <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-ice-silver')">Soft Ice Silver</button>
+      <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #f43f5e;" onclick="setTheme('theme-crimson-red')">Crimson Blood Red</button>
+      <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #10b981;" onclick="setTheme('theme-emerald-green')">Emerald Forest Green</button>
+      <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #a855f7;" onclick="setTheme('theme-royal-purple')">Royal Luxury Purple</button>
+      <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #f59e0b;" onclick="setTheme('theme-sunset-gold')">Cyberpunk Sunset Gold</button>
+      <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #14b8a6;" onclick="setTheme('theme-deep-teal')">Ocean Deep Teal</button>
     </div>
   </div>
 </div>
@@ -421,13 +456,12 @@ async function persist() {
   }
   updateUI();
 }
-
-auth.onAuthStateChanged(async (user) => {
+  auth.onAuthStateChanged(async (user) => {
   currentUser = user;
   const info = document.getElementById("userInfo");
   const btn = document.getElementById("authBtn");
   if (user) {
-    info.innerHTML = `<img class="user-avatar" src="${user.photoURL || 'https://via.placeholder.com/24'}"><span>${user.displayName ? user.displayName.split(' ')[0] : 'User'}</span>`;
+    info.innerHTML = `<img class="user-avatar" src="${user.photoURL || 'https://via.placeholder.com/26'}"><span>${user.displayName ? user.displayName.split(' ')[0] : 'User'}</span>`;
     btn.innerText = "Logout";
     try {
       const doc = await db.collection("users").doc(user.uid).get();
@@ -507,13 +541,13 @@ function renderNotes() {
   const list = store.notes.filter(n => n.folder === activeFolder);
   document.getElementById('notesContainer').innerHTML = !list.length ? '<p style="color:var(--sub);font-size:0.75rem;padding:6px;">No notes.</p>' :
     list.map(n => `
-      <div class="item" style="flex-direction:column; align-items:flex-start; gap:4px;">
+      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div style="display:flex; justify-content:space-between; width:100%;">
           <strong style="color:var(--primary);">${n.title}</strong>
           <button class="del" onclick="delNote(${n.id})">✕</button>
         </div>
-        <div style="font-size:0.75rem; white-space:pre-wrap;">${n.content}</div>
-        <small style="color:var(--sub); font-size:0.65rem;">🕒 ${n.time}</small>
+        <div style="font-size:0.8rem; white-space:pre-wrap; line-height:1.4;">${n.content}</div>
+        <small style="color:var(--sub); font-size:0.68rem;">🕒 ${n.time}</small>
       </div>
     `).join('');
 }
@@ -577,7 +611,19 @@ function renderCharts() {
   if (trendChart) trendChart.destroy();
   trendChart = new Chart(ctxT, {
     type: 'line',
-    data: { labels, datasets: [{ data, borderColor: '#38bdf8', borderWidth: 2, fill: true, backgroundColor: 'rgba(56,189,248,0.1)', tension: 0.3, pointRadius: 2 }] },
+    data: { 
+      labels, 
+      datasets: [{ 
+        data, 
+        borderColor: '#38bdf8', 
+        borderWidth: 2.5, 
+        fill: true, 
+        backgroundColor: 'rgba(56,189,248,0.14)', 
+        tension: 0.35, 
+        pointRadius: 2, 
+        pointHoverRadius: 5 
+      }] 
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }
   });
 
@@ -586,7 +632,14 @@ function renderCharts() {
   const sKeys = Object.keys(cur.streakHistory || {}).slice(-7);
   streakChart = new Chart(ctxS, {
     type: 'bar',
-    data: { labels: sKeys.length ? sKeys : ['Today'], datasets: [{ data: sKeys.length ? sKeys.map(k => cur.streakHistory[k]) : [cur.streak || 0], backgroundColor: '#f59e0b', borderRadius: 4 }] },
+    data: { 
+      labels: sKeys.length ? sKeys : ['Today'], 
+      datasets: [{ 
+        data: sKeys.length ? sKeys.map(k => cur.streakHistory[k]) : [cur.streak || 0], 
+        backgroundColor: '#f59e0b', 
+        borderRadius: 6 
+      }] 
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { stepSize: 1, grid: { color: 'rgba(255,255,255,0.05)' } } } }
   });
 
@@ -595,7 +648,14 @@ function renderCharts() {
   const cK = Object.keys(catDist);
   catChart = new Chart(ctxC, {
     type: 'doughnut',
-    data: { labels: cK.length ? cK : ['None'], datasets: [{ data: cK.length ? Object.values(catDist) : [1], backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'], borderWidth: 0 }] },
+    data: { 
+      labels: cK.length ? cK : ['None'], 
+      datasets: [{ 
+        data: cK.length ? Object.values(catDist) : [1], 
+        backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'], 
+        borderWidth: 0 
+      }] 
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 }, color: '#94a3b8' } } } }
   });
 }
@@ -611,9 +671,9 @@ function renderReports() {
   });
   document.getElementById('reportList').innerHTML = !Object.keys(grp).length ? '<p style="color:var(--sub);font-size:0.75rem;">No logs.</p>' :
     Object.keys(grp).map(d => `
-      <div class="item" style="flex-direction:column; align-items:flex-start; gap:4px;">
+      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
         <div style="display:flex; justify-content:space-between; width:100%;"><strong>📅 ${d}</strong><small style="color:var(--sub);">${grp[d].c} actions</small></div>
-        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.75rem;">
+        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.78rem;">
           <span class="earn">+₹${grp[d].e.toFixed(1)}</span>
           <span class="spend">-₹${grp[d].s.toFixed(1)}</span>
           <b>Net: ₹${(grp[d].e - grp[d].s).toFixed(1)}</b>
