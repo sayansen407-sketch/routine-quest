@@ -9,24 +9,27 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
   :root {
     --bg: #070d19;
-    --card: rgba(17, 24, 39, 0.9);
+    --card: rgba(17, 24, 39, 0.92);
     --border: rgba(56, 189, 248, 0.25);
     --primary: #38bdf8;
     --primary-glow: rgba(56, 189, 248, 0.4);
     --earn: #10b981;
     --spend: #f43f5e;
     --gold: #fbbf24;
+    --silver: #94a3b8;
+    --bronze: #d97706;
     --text: #f8fafc;
     --sub: #94a3b8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: radial-gradient(circle at top, #1e293b, #070d19 80%); color: var(--text); padding: 14px; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  body { background: radial-gradient(circle at top, #1e293b, #070d19 80%); color: var(--text); padding: 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; }
   
-  /* Auth Bar */
   .auth-bar { display: flex; align-items: center; justify-content: space-between; background: rgba(15,23,42,0.85); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
   .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
   .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); }
@@ -38,36 +41,58 @@
   .plus-btn { background: var(--primary); color: #070d19; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; border: none; cursor: pointer; }
   
   .card { background: var(--card); backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-  .wallet { text-align: center; }
-  .badge { display: inline-block; font-size: 0.85rem; color: #000; background: linear-gradient(135deg, #d97706, var(--gold)); padding: 5px 14px; border-radius: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
-  .balance { font-size: 2.6rem; font-weight: 900; text-shadow: 0 0 16px var(--primary-glow); margin-bottom: 8px; }
-  .prog-bg { width: 100%; height: 10px; background: #0f172a; border-radius: 20px; overflow: hidden; }
+  .wallet { text-align: center; position: relative; }
+  .badge-row { display: flex; justify-content: center; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .badge { font-size: 0.8rem; color: #000; background: linear-gradient(135deg, #d97706, var(--gold)); padding: 4px 12px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
+  .streak-badge { font-size: 0.8rem; background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+  .rank-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: 900; }
+  .rank-1 { background: var(--gold); color: #000; }
+  .rank-2 { background: var(--silver); color: #000; }
+  .rank-3 { background: var(--bronze); color: #fff; }
+
+  .balance { font-size: 2.5rem; font-weight: 900; text-shadow: 0 0 16px var(--primary-glow); margin-bottom: 8px; }
+  .prog-bg { width: 100%; height: 8px; background: #0f172a; border-radius: 20px; overflow: hidden; }
   .prog-fill { height: 100%; background: linear-gradient(90deg, #0284c7, var(--primary)); width: 0%; transition: width 0.4s ease; }
   .prog-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub); margin-top: 6px; }
   
-  /* Tabs */
-  .nav { display: flex; gap: 6px; background: rgba(15,23,42,0.7); padding: 5px; border-radius: 12px; margin-bottom: 12px; }
-  .nav button { flex: 1; padding: 10px 0; background: transparent; color: var(--sub); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .target-box { background: rgba(15,23,42,0.6); padding: 8px 12px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.15); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+  .target-box span b { color: var(--earn); }
+  .target-btn { background: rgba(56,189,248,0.2); border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+
+  .nav { display: flex; gap: 5px; background: rgba(15,23,42,0.7); padding: 5px; border-radius: 12px; margin-bottom: 12px; overflow-x: auto; }
+  .nav button { flex: 1; padding: 9px 6px; background: transparent; color: var(--sub); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.78rem; white-space: nowrap; }
   .nav button.active { background: var(--primary); color: #070d19; }
   .tab { display: none; }
   .tab.active { display: block; }
   
-  h3 { font-size: 1.1rem; margin-bottom: 12px; }
+  h3 { font-size: 1.05rem; margin-bottom: 12px; }
   form { display: flex; flex-direction: column; gap: 10px; }
-  input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #090e17; color: #fff; font-size: 0.95rem; outline: none; }
-  .btn { padding: 13px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; }
+  input, select, textarea { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #090e17; color: #fff; font-size: 0.9rem; outline: none; }
+  .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; }
   
-  /* Lists & Daily Summary Cards */
+  .chart-filter-bar { display: flex; gap: 6px; margin-bottom: 12px; background: #090e17; padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+  .chart-filter-btn { flex: 1; background: transparent; border: none; color: var(--sub); padding: 6px 0; font-size: 0.75rem; font-weight: 800; border-radius: 6px; cursor: pointer; text-align: center; }
+  .chart-filter-btn.active { background: var(--primary); color: #070d19; }
+  .chart-container { position: relative; width: 100%; height: 210px; margin-bottom: 16px; }
+
   .list { max-height: 280px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #090e17; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); }
+  .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #090e17; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
   .earn { color: var(--earn); font-weight: bold; }
   .spend { color: var(--spend); font-weight: bold; }
+  .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--primary); margin-left: 6px; }
   .del { background: rgba(244,63,94,0.15); color: var(--spend); border: 1px solid rgba(244,63,94,0.3); padding: 5px 8px; border-radius: 6px; cursor: pointer; }
 
-  /* Report Card Styles */
   .summary-card { background: #090e17; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-  .summary-header { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; margin-bottom: 8px; font-size: 0.9rem; }
+  .summary-header { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; margin-bottom: 8px; font-size: 0.85rem; }
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-size: 0.8rem; }
+
+  .folder-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
+  .folder-tab { background: #090e17; border: 1px solid rgba(255,255,255,0.1); color: var(--sub); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+  .folder-tab.active { background: var(--primary); color: #070d19; font-weight: 800; }
+  .note-card { background: #090e17; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 12px; margin-bottom: 10px; position: relative; }
+  .note-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 6px; color: var(--primary); }
+  .note-body { font-size: 0.85rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.4; }
+  .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.7rem; color: var(--sub); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; }
 </style>
 </head>
 <body>
@@ -83,16 +108,28 @@
 </div>
 
 <div class="card wallet">
-  <div class="badge" id="levelBadge">Level 1 - Novice</div>
+  <div class="badge-row">
+    <span class="badge" id="levelBadge">Level 1 : Novice</span>
+    <span class="streak-badge" id="streakBadge">🔥 0 Days</span>
+    <span class="rank-badge" id="rankBadge" style="display:none;"></span>
+  </div>
   <div style="font-size:0.75rem; color:var(--sub); text-transform:uppercase;">Net Balance</div>
   <div class="balance" id="walletBalance">₹ 0.00</div>
   <div class="prog-bg"><div class="prog-fill" id="progressFill"></div></div>
   <div class="prog-meta"><span>XP Target</span><span id="progressText">0 / 500</span></div>
+  
+  <div class="target-box">
+    <span>Daily Streak Target: <b id="dailyTargetDisplay">₹100</b> | Today: <b id="todayEarnedDisplay">₹0</b></span>
+    <button class="target-btn" onclick="changeDailyTarget()">Edit Target</button>
+  </div>
 </div>
 
 <div class="nav">
   <button class="active" onclick="switchTab('tabLog', this)">Activity</button>
+  <button onclick="switchTab('tabCharts', this)">Charts</button>
   <button onclick="switchTab('tabReport', this)">Daily Report</button>
+  <button onclick="switchTab('tabNotes', this)">Notes</button>
+  <button onclick="switchTab('tabCategories', this)">Category</button>
   <button onclick="switchTab('tabRates', this)">Rates</button>
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
@@ -109,17 +146,73 @@
   <div class="list" id="listHistory"></div>
 </div>
 
-<!-- Tab 2: Daily Report & Summaries -->
+<!-- Tab 2: Stock-Market Style Charts -->
+<div id="tabCharts" class="tab card">
+  <h3>Financial & Routine Trends</h3>
+  <div class="chart-filter-bar">
+    <button class="chart-filter-btn" onclick="setChartFilter('1D', this)">1D</button>
+    <button class="chart-filter-btn active" onclick="setChartFilter('1W', this)">1W</button>
+    <button class="chart-filter-btn" onclick="setChartFilter('1M', this)">1M</button>
+    <button class="chart-filter-btn" onclick="setChartFilter('1Y', this)">1Y</button>
+    <button class="chart-filter-btn" onclick="setChartFilter('ALL', this)">ALL</button>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="trendChart"></canvas>
+  </div>
+
+  <h3 style="margin-top:14px;">🔥 Streak & Consistency Trend</h3>
+  <div class="chart-container" style="height: 180px;">
+    <canvas id="streakChart"></canvas>
+  </div>
+
+  <h3 style="margin-top:14px;">Category Distribution</h3>
+  <div class="chart-container" style="height: 180px;">
+    <canvas id="categoryChart"></canvas>
+  </div>
+</div>
+
+<!-- Tab 3: Daily Report -->
 <div id="tabReport" class="tab card">
   <h3>Daily Performance Summary</h3>
   <div id="reportList" style="max-height: 380px; overflow-y: auto;"></div>
 </div>
 
-<!-- Tab 3: Rates -->
+<!-- Tab 4: Notes & Unlimited Folders -->
+<div id="tabNotes" class="tab card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <h3>Folders & Notes</h3>
+    <button class="target-btn" onclick="createFolder()">+ New Folder</button>
+  </div>
+  
+  <div class="folder-nav" id="folderList"></div>
+
+  <form id="formNote" style="margin-bottom: 16px;">
+    <input type="text" id="noteTitle" placeholder="Note Title / Subject" required>
+    <textarea id="noteContent" rows="3" placeholder="Write anything here... (Unlimited notes allowed)" required></textarea>
+    <button type="submit" class="btn">+ Save Note</button>
+  </form>
+
+  <div id="notesContainer" style="max-height: 320px; overflow-y: auto;"></div>
+</div>
+
+<!-- Tab 5: Dynamic Categories -->
+<div id="tabCategories" class="tab card">
+  <h3>Add New Category</h3>
+  <form id="formCategory">
+    <input type="text" id="catInput" placeholder="Category Name (e.g. Study, Gym, Work)" required>
+    <button type="submit" class="btn">+ Create Category</button>
+  </form>
+  <h3 style="margin-top:16px;">Existing Categories</h3>
+  <div class="list" id="listCategories"></div>
+</div>
+
+<!-- Tab 6: Rates -->
 <div id="tabRates" class="tab card">
   <h3>Add Rate</h3>
   <form id="formRate">
     <input type="text" id="rateName" placeholder="Activity Name" required>
+    <select id="rateCategorySelect"></select>
     <div style="display:flex; gap:8px;">
       <select id="rateType"><option value="Earn">Earn (+)</option><option value="Spend">Spend (-)</option></select>
       <input type="number" id="rateVal" placeholder="₹ Rate" step="any" required>
@@ -137,7 +230,7 @@
   <div class="list" id="listRates"></div>
 </div>
 
-<!-- Tab 4: Levels -->
+<!-- Tab 7: Levels -->
 <div id="tabLevels" class="tab card">
   <h3>Define Level</h3>
   <form id="formLevel">
@@ -151,7 +244,6 @@
   <h3 style="margin-top:16px;">Levels</h3>
   <div class="list" id="listLevels"></div>
 </div>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
@@ -168,15 +260,28 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
+let trendChartInstance = null;
+let streakChartInstance = null;
+let categoryChartInstance = null;
+let activeChartFilter = '1W';
+let currentActiveFolder = "General";
+
 let store = JSON.parse(localStorage.getItem('rq_db')) || {
   active: "Default",
+  categories: ["General", "Study", "Fitness", "Work", "Distraction"],
+  folders: ["General", "Ideas", "Finance"],
+  notes: [],
   profiles: {
     "Default": {
       balance: 0,
+      streak: 0,
+      dailyTarget: 100,
+      lastActiveDate: "",
+      streakHistory: {},
       acts: [
-        { id: 1, name: "Focus Work", type: "Earn", rate: 50, unit: "Task" },
-        { id: 2, name: "Reading", type: "Earn", rate: 2, unit: "1 Min" },
-        { id: 3, name: "Distraction", type: "Spend", rate: 30, unit: "Task" }
+        { id: 1, name: "Focus Work", category: "Work", type: "Earn", rate: 50, unit: "Task" },
+        { id: 2, name: "Reading", category: "Study", type: "Earn", rate: 2, unit: "1 Min" },
+        { id: 3, name: "Distraction", category: "Distraction", type: "Spend", rate: 30, unit: "Task" }
       ],
       lvls: [
         { lvl: 1, title: "Novice", target: 500 },
@@ -188,32 +293,82 @@ let store = JSON.parse(localStorage.getItem('rq_db')) || {
   }
 };
 
-function getCur() { return store.profiles[store.active]; }
+if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
+if (!store.folders) store.folders = ["General", "Ideas", "Finance"];
+if (!store.notes) store.notes = [];
 
-// Strict Indian Standard Time (IST) Date Formatter
+function getCur() { 
+  if (!store.profiles[store.active]) {
+    store.active = Object.keys(store.profiles)[0] || "Default";
+  }
+  const cur = store.profiles[store.active];
+  if (!cur.dailyTarget) cur.dailyTarget = 100;
+  if (!cur.streakHistory) cur.streakHistory = {};
+  return cur;
+}
+
 function getIndianDateTime() {
   const now = new Date();
-  
-  // Strict Asia/Kolkata date
-  const dateOnly = now.toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
+  const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
+  const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
+  const isoDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  return { dateOnly, timeString: `${dateOnly} • ${timeOnly}`, isoDate };
+}
 
-  // Strict Asia/Kolkata time (12-hour AM/PM)
-  const timeOnly = now.toLocaleTimeString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+function getTodayEarned() {
+  const cur = getCur();
+  const today = getIndianDateTime().dateOnly;
+  return (cur.logs || [])
+    .filter(l => l.dateOnly === today && l.type === 'Earn')
+    .reduce((sum, l) => sum + l.amt, 0);
+}
 
-  return {
-    dateOnly: dateOnly,
-    timeString: `${dateOnly} • ${timeOnly}`
-  };
+function checkAndUpdateStreakOnEarn() {
+  const cur = getCur();
+  const ist = getIndianDateTime();
+  const todayIso = ist.isoDate;
+  const earnedToday = getTodayEarned();
+
+  if (earnedToday >= cur.dailyTarget) {
+    if (cur.lastActiveDate !== todayIso) {
+      if (!cur.lastActiveDate) {
+        cur.streak = 1;
+      } else {
+        const last = new Date(cur.lastActiveDate);
+        const curr = new Date(todayIso);
+        const diffDays = Math.round((curr - last) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) cur.streak += 1;
+        else if (diffDays > 1) cur.streak = 1;
+      }
+      cur.lastActiveDate = todayIso;
+    }
+    cur.streakHistory[todayIso] = cur.streak;
+  }
+}
+
+function getLeaderboardRanks() {
+  const list = Object.keys(store.profiles).map(name => ({
+    name,
+    streak: store.profiles[name].streak || 0
+  })).sort((a, b) => b.streak - a.streak);
+
+  const curStreak = getCur().streak || 0;
+  if (curStreak === 0) return null;
+
+  if (list[0] && list[0].streak === curStreak) return { rank: 1, text: "🥇 1st Highest", cls: "rank-1" };
+  if (list[1] && list[1].streak === curStreak) return { rank: 2, text: "🥈 2nd Highest", cls: "rank-2" };
+  if (list[2] && list[2].streak === curStreak) return { rank: 3, text: "🥉 3rd Highest", cls: "rank-3" };
+  return null;
+}
+
+function changeDailyTarget() {
+  const cur = getCur();
+  let val = prompt("Set Daily Target Earning (₹):", cur.dailyTarget || 100);
+  if (val && !isNaN(val) && parseFloat(val) > 0) {
+    cur.dailyTarget = parseFloat(val);
+    checkAndUpdateStreakOnEarn();
+    persist();
+  }
 }
 
 async function persist() {
@@ -222,7 +377,7 @@ async function persist() {
     try {
       await db.collection("users").doc(currentUser.uid).set(store);
     } catch (err) {
-      console.error("Sync error:", err);
+      console.error("Cloud sync error:", err);
     }
   }
   updateUI();
@@ -245,12 +400,15 @@ auth.onAuthStateChanged(async (user) => {
       const doc = await db.collection("users").doc(user.uid).get();
       if (doc.exists) {
         store = doc.data();
+        if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
+        if (!store.folders) store.folders = ["General", "Ideas", "Finance"];
+        if (!store.notes) store.notes = [];
         localStorage.setItem('rq_db', JSON.stringify(store));
       } else {
         await db.collection("users").doc(user.uid).set(store);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error("Firestore fetch error:", err);
     }
   } else {
     info.innerHTML = `<span>🔒 Guest (Offline)</span>`;
@@ -274,6 +432,7 @@ function switchTab(id, btn) {
   document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'tabCharts') renderStockCharts();
 }
 
 function addProfile() {
@@ -282,7 +441,11 @@ function addProfile() {
   name = name.trim();
   store.profiles[name] = {
     balance: 0,
-    acts: [{ id: 1, name: "Task", type: "Earn", rate: 20, unit: "Task" }],
+    streak: 0,
+    dailyTarget: 100,
+    lastActiveDate: "",
+    streakHistory: {},
+    acts: [{ id: 1, name: "Task", category: "General", type: "Earn", rate: 20, unit: "Task" }],
     lvls: [{ lvl: 1, title: "Beginner", target: 500 }],
     logs: []
   };
@@ -292,6 +455,209 @@ function addProfile() {
 
 function switchProfile(name) {
   if (store.profiles[name]) { store.active = name; persist(); }
+}
+
+function createFolder() {
+  const name = prompt("Enter Folder Name:");
+  if (!name || !name.trim()) return;
+  const fName = name.trim();
+  if (store.folders.includes(fName)) return alert("Folder already exists!");
+  store.folders.push(fName);
+  currentActiveFolder = fName;
+  persist();
+}
+
+function selectFolder(folderName) {
+  currentActiveFolder = folderName;
+  renderNotes();
+}
+
+document.getElementById('formNote').onsubmit = (e) => {
+  e.preventDefault();
+  const title = document.getElementById('noteTitle').value.trim();
+  const content = document.getElementById('noteContent').value.trim();
+  if (!title || !content) return;
+
+  const ist = getIndianDateTime();
+  store.notes.unshift({
+    id: Date.now(),
+    folder: currentActiveFolder,
+    title,
+    content,
+    timeString: ist.timeString
+  });
+
+  persist();
+  document.getElementById('formNote').reset();
+};
+
+function delNote(id) {
+  store.notes = store.notes.filter(n => n.id !== id);
+  persist();
+}
+
+function renderNotes() {
+  const fList = document.getElementById('folderList');
+  fList.innerHTML = store.folders.map(f => `
+    <div class="folder-tab ${f === currentActiveFolder ? 'active' : ''}" onclick="selectFolder('${f}')">
+      📁 ${f}
+    </div>
+  `).join('');
+
+  const container = document.getElementById('notesContainer');
+  const filtered = store.notes.filter(n => n.folder === currentActiveFolder);
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="color:var(--sub);font-size:0.8rem;text-align:center;padding:10px;">No notes in folder "${currentActiveFolder}".</p>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(n => `
+    <div class="note-card">
+      <div class="note-title">${n.title}</div>
+      <div class="note-body">${n.content}</div>
+      <div class="note-footer">
+        <span>🕒 ${n.timeString}</span>
+        <button class="del" onclick="delNote(${n.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('formCategory').onsubmit = (e) => {
+  e.preventDefault();
+  const name = document.getElementById('catInput').value.trim();
+  if (!name) return;
+  if (store.categories.includes(name)) return alert("Category already exists!");
+  store.categories.push(name);
+  persist();
+  document.getElementById('catInput').value = '';
+};
+
+function delCategory(idx) {
+  if (store.categories.length <= 1) return alert("At least one category is required!");
+  store.categories.splice(idx, 1);
+  persist();
+}
+
+function setChartFilter(filter, btn) {
+  activeChartFilter = filter;
+  document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStockCharts();
+}
+
+function renderStockCharts() {
+  const cur = getCur();
+  const now = Date.now();
+  let timeLimit = 0;
+
+  if (activeChartFilter === '1D') timeLimit = 24 * 60 * 60 * 1000;
+  else if (activeChartFilter === '1W') timeLimit = 7 * 24 * 60 * 60 * 1000;
+  else if (activeChartFilter === '1M') timeLimit = 30 * 24 * 60 * 60 * 1000;
+  else if (activeChartFilter === '1Y') timeLimit = 365 * 24 * 60 * 60 * 1000;
+  else timeLimit = Infinity;
+
+  const filtered = (cur.logs || [])
+    .filter(l => (now - (l.timestamp || now)) <= timeLimit)
+    .slice().reverse();
+
+  let cum = 0;
+  const labels = [];
+  const points = [];
+  const catDist = {};
+
+  filtered.forEach(l => {
+    cum += (l.type === 'Earn' ? l.amt : -l.amt);
+    labels.push(l.timeString ? l.timeString.split('•')[1] || l.dateOnly : 'Entry');
+    points.push(cum);
+
+    const cat = l.category || 'General';
+    catDist[cat] = (catDist[cat] || 0) + l.amt;
+  });
+
+  if (points.length === 0) {
+    labels.push("Now");
+    points.push(cur.balance);
+  }
+
+  const ctxTrend = document.getElementById('trendChart').getContext('2d');
+  if (trendChartInstance) trendChartInstance.destroy();
+  trendChartInstance = new Chart(ctxTrend, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Net Balance ₹',
+        data: points,
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointRadius: points.length > 25 ? 0 : 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#64748b', maxTicksLimit: 6 } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const ctxStreak = document.getElementById('streakChart').getContext('2d');
+  if (streakChartInstance) streakChartInstance.destroy();
+  const streakKeys = Object.keys(cur.streakHistory || {}).slice(-7);
+  const streakVals = streakKeys.map(k => cur.streakHistory[k]);
+
+  streakChartInstance = new Chart(ctxStreak, {
+    type: 'bar',
+    data: {
+      labels: streakKeys.length > 0 ? streakKeys : ['Today'],
+      datasets: [{
+        label: 'Streak (Days)',
+        data: streakVals.length > 0 ? streakVals : [cur.streak || 0],
+        backgroundColor: '#f59e0b',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#64748b' } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', stepSize: 1 } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const ctxCat = document.getElementById('categoryChart').getContext('2d');
+  if (categoryChartInstance) categoryChartInstance.destroy();
+  const catKeys = Object.keys(catDist);
+  const catValues = Object.values(catDist);
+
+  categoryChartInstance = new Chart(ctxCat, {
+    type: 'doughnut',
+    data: {
+      labels: catKeys.length > 0 ? catKeys : ['No Activity'],
+      datasets: [{
+        data: catValues.length > 0 ? catValues : [1],
+        backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } }
+      }
+    }
+  });
 }
 
 function renderDailyReports(logs) {
@@ -304,15 +670,19 @@ function renderDailyReports(logs) {
   const grouped = {};
   logs.forEach(log => {
     const dateKey = log.dateOnly || "Earlier";
-    if (!grouped[dateKey]) grouped[dateKey] = { earn: 0, spend: 0, count: 0 };
+    if (!grouped[dateKey]) grouped[dateKey] = { earn: 0, spend: 0, count: 0, categories: {} };
     if (log.type === 'Earn') grouped[dateKey].earn += log.amt;
     else grouped[dateKey].spend += log.amt;
     grouped[dateKey].count++;
+
+    const cat = log.category || 'General';
+    grouped[dateKey].categories[cat] = (grouped[dateKey].categories[cat] || 0) + log.amt;
   });
 
   container.innerHTML = Object.keys(grouped).map(date => {
     const d = grouped[date];
     const net = d.earn - d.spend;
+    const catSummary = Object.keys(d.categories).map(c => `${c}: ₹${d.categories[c].toFixed(0)}`).join(' • ');
     return `
       <div class="summary-card">
         <div class="summary-header">
@@ -324,37 +694,54 @@ function renderDailyReports(logs) {
           <div><span style="color:var(--sub);">Spent</span><br><b class="spend">-₹${d.spend.toFixed(1)}</b></div>
           <div><span style="color:var(--sub);">Net</span><br><b style="color:${net >= 0 ? 'var(--earn)' : 'var(--spend)'}">${net >= 0 ? '+' : ''}₹${net.toFixed(1)}</b></div>
         </div>
+        <div style="font-size:0.7rem; color:var(--sub); margin-top:8px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;">
+          🏷️ <b>Categories:</b> ${catSummary || 'None'}
+        </div>
       </div>
     `;
   }).join('');
 }
 
 function updateUI() {
-  let cur = getCur();
+  const cur = getCur();
   
   const selector = document.getElementById('saveSelector');
   selector.innerHTML = Object.keys(store.profiles).map(k => `<option value="${k}" ${k===store.active?'selected':''}>📂 ${k}</option>`).join('');
 
   document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
 
+  document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
+  const rankInfo = getLeaderboardRanks();
+  const rankElem = document.getElementById('rankBadge');
+  if (rankInfo) {
+    rankElem.style.display = "inline-block";
+    rankElem.innerText = rankInfo.text;
+    rankElem.className = `rank-badge ${rankInfo.cls}`;
+  } else {
+    rankElem.style.display = "none";
+  }
+
+  document.getElementById('dailyTargetDisplay').innerText = `₹${cur.dailyTarget || 100}`;
+  document.getElementById('todayEarnedDisplay').innerText = `₹${getTodayEarned().toFixed(0)}`;
+
   cur.lvls.sort((a,b) => a.lvl - b.lvl);
   let currentLvl = cur.lvls[0];
   for (let l of cur.lvls) { if (cur.balance >= l.target) currentLvl = l; }
-
   document.getElementById('levelBadge').innerText = `Level ${currentLvl.lvl} : ${currentLvl.title}`;
   let pct = Math.min(100, Math.max(0, (cur.balance / currentLvl.target) * 100));
   document.getElementById('progressFill').style.width = `${pct}%`;
   document.getElementById('progressText').innerText = `${cur.balance.toFixed(0)} / ${currentLvl.target}`;
 
-  document.getElementById('selectAct').innerHTML = cur.acts.map(a => `<option value="${a.id}">${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>`).join('');
+  document.getElementById('selectAct').innerHTML = cur.acts.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>`).join('');
 
-  // History with Indian Standard Time
+  document.getElementById('rateCategorySelect').innerHTML = store.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
   document.getElementById('listHistory').innerHTML = cur.logs.length === 0 ? '<p style="color:var(--sub);font-size:0.8rem;">No records yet.</p>' :
     cur.logs.map((h, i) => `
       <div class="item">
         <div>
-          <strong>${h.name}</strong> 
-          <small style="color:var(--sub); font-size:0.75rem;">(${h.qty} ${h.unit})</small>
+          <strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span>
+          <small style="color:var(--sub); font-size:0.75rem;"> (${h.qty} ${h.unit})</small>
           <div style="font-size:0.7rem; color:var(--sub); margin-top:2px;">🕒 ${h.timeString || h.dateOnly || 'Earlier'}</div>
         </div>
         <div>
@@ -363,11 +750,19 @@ function updateUI() {
         </div>
       </div>`).join('');
 
+  document.getElementById('listCategories').innerHTML = store.categories.map((c, i) => `
+    <div class="item">
+      <span>🏷️ <b>${c}</b></span>
+      <button class="del" onclick="delCategory(${i})">✕</button>
+    </div>
+  `).join('');
+
   renderDailyReports(cur.logs);
+  renderNotes();
 
   document.getElementById('listRates').innerHTML = cur.acts.map((a, i) => `
     <div class="item">
-      <div><strong>${a.name}</strong> <small style="color:var(--sub);">(${a.unit})</small></div>
+      <div><strong>${a.name}</strong><span class="tag">${a.category || 'General'}</span> <small style="color:var(--sub);">(${a.unit})</small></div>
       <div><span class="${a.type==='Earn'?'earn':'spend'}">₹${a.rate}</span> <button class="del" onclick="delRate(${i})">✕</button></div>
     </div>`).join('');
 
@@ -386,13 +781,14 @@ document.getElementById('formLog').onsubmit = (e) => {
   let act = cur.acts.find(a => a.id === id);
   let total = act.rate * qty;
   
-  if (act.type === 'Earn') cur.balance += total; else cur.balance -= total;
+  if (act.type === 'Earn') cur.balance += total;
+  else cur.balance -= total;
 
-  // Real Indian Date & Time
   const ist = getIndianDateTime();
 
   cur.logs.unshift({
     name: act.name,
+    category: act.category || "General",
     type: act.type,
     amt: total,
     qty: qty,
@@ -401,6 +797,8 @@ document.getElementById('formLog').onsubmit = (e) => {
     dateOnly: ist.dateOnly,
     timeString: ist.timeString
   });
+
+  if (act.type === 'Earn') checkAndUpdateStreakOnEarn();
 
   persist();
   document.getElementById('inputDuration').value = '';
@@ -412,6 +810,7 @@ document.getElementById('formRate').onsubmit = (e) => {
   cur.acts.push({
     id: Date.now(),
     name: document.getElementById('rateName').value,
+    category: document.getElementById('rateCategorySelect').value,
     type: document.getElementById('rateType').value,
     rate: parseFloat(document.getElementById('rateVal').value),
     unit: document.getElementById('rateUnit').value
