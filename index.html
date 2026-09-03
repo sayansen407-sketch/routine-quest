@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RoutineQuest Pro Cloud</title>
 
-<!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -29,7 +27,7 @@
     --sub: #94a3b8;
   }
 
-  /* Themes */
+  /* Themes & Varied Shades */
   body.theme-pitch-dark {
     --bg-gradient: #000000;
     --card: #0a0a0a;
@@ -40,6 +38,16 @@
     --text: #ffffff;
     --sub: #a1a1aa;
   }
+  body.theme-slate-grey {
+    --bg-gradient: #1e293b;
+    --card: #0f172a;
+    --input-bg: #0b1120;
+    --border: #334155;
+    --primary: #94a3b8;
+    --primary-glow: rgba(148,163,184,0.3);
+    --text: #f1f5f9;
+    --sub: #94a3b8;
+  }
   body.theme-light-white {
     --bg-gradient: #f8fafc;
     --card: #ffffff;
@@ -48,6 +56,26 @@
     --primary: #0284c7;
     --primary-glow: rgba(2,132,199,0.2);
     --text: #0f172a;
+    --sub: #64748b;
+  }
+  body.theme-warm-paper {
+    --bg-gradient: #faf7f2;
+    --card: #ffffff;
+    --input-bg: #f5efe6;
+    --border: #e2d9cc;
+    --primary: #b45309;
+    --primary-glow: rgba(180,83,9,0.2);
+    --text: #292524;
+    --sub: #78716c;
+  }
+  body.theme-ice-silver {
+    --bg-gradient: #eef2f6;
+    --card: #ffffff;
+    --input-bg: #e2e8f0;
+    --border: #cbd5e1;
+    --primary: #475569;
+    --primary-glow: rgba(71,85,105,0.2);
+    --text: #1e293b;
     --sub: #64748b;
   }
   body.theme-crimson-red {
@@ -80,14 +108,41 @@
     --text: #faf5ff;
     --sub: #d8b4fe;
   }
+  body.theme-sunset-gold {
+    --bg-gradient: radial-gradient(circle at top, #451a03, #0c0401 80%);
+    --card: #1c0a02;
+    --input-bg: #0c0401;
+    --border: rgba(245,158,11,0.35);
+    --primary: #f59e0b;
+    --primary-glow: rgba(245,158,11,0.4);
+    --text: #fffbeb;
+    --sub: #fcd34d;
+  }
+  body.theme-deep-teal {
+    --bg-gradient: radial-gradient(circle at top, #042f2e, #021414 80%);
+    --card: #051d1d;
+    --input-bg: #021414;
+    --border: rgba(20,184,166,0.35);
+    --primary: #14b8a6;
+    --primary-glow: rgba(20,184,166,0.4);
+    --text: #f0fdfa;
+    --sub: #5eead4;
+  }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: var(--bg-gradient); color: var(--text); padding: 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; transition: background 0.3s; }
+  body { background: var(--bg-gradient); color: var(--text); padding: 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; transition: background 0.3s; position: relative; }
   
-  .auth-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+  /* Top Corner Header with 3-Dots */
+  .top-app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; position: relative; }
+  .menu-btn { background: var(--card); border: 1px solid var(--border); color: var(--primary); font-size: 1.3rem; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+  .dropdown-menu { display: none; position: absolute; left: 0; top: 46px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 60; min-width: 200px; }
+  .dropdown-menu.show { display: flex; flex-direction: column; }
+  .dropdown-menu button { background: transparent; border: none; color: var(--text); padding: 11px 14px; text-align: left; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .dropdown-menu button:hover { background: rgba(56,189,248,0.1); color: var(--primary); }
+    .auth-bar { flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 7px 12px; border-radius: 10px; border: 1px solid var(--border); }
   .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-  .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); }
-  .auth-btn { background: var(--primary); color: #070d19; font-weight: 800; font-size: 0.8rem; border: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  .user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--primary); }
+  .auth-btn { background: var(--primary); color: #070d19; font-weight: 800; font-size: 0.75rem; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
   .logout-btn { background: rgba(244,63,94,0.2); color: var(--spend); border: 1px solid rgba(244,63,94,0.4); }
 
   .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
@@ -119,15 +174,6 @@
   .tab { display: none; }
   .tab.active { display: block; }
   
-  /* Header with 3-Dots Menu */
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .menu-btn { background: transparent; border: none; color: var(--primary); font-size: 1.3rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
-  .dropdown-menu { display: none; position: absolute; right: 16px; top: 48px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 50; min-width: 180px; }
-  .dropdown-menu.show { display: flex; flex-direction: column; }
-  .dropdown-menu button { background: transparent; border: none; color: var(--text); padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .dropdown-menu button:hover { background: rgba(56,189,248,0.1); color: var(--primary); }
-
-  /* Modals */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
   .modal-overlay.show { display: flex; }
   .modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 18px; max-height: 85vh; overflow-y: auto; }
@@ -157,16 +203,23 @@
   .folder-tab.active { background: var(--primary); color: #070d19; font-weight: 800; }
   .note-card { background: var(--input-bg); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
   .note-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 6px; color: var(--primary); }
-  .note-body { font-size: 0.85rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.4; }
+  .note-body { font-size: 0.85rem; color: var(--text); opacity: 0.9; white-space: pre-wrap; line-height: 1.4; }
   .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.7rem; color: var(--sub); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; }
 </style>
 </head>
 <body>
-  <div class="auth-bar">
-  <div class="user-info" id="userInfo"><span>🔒 Guest (Offline)</span></div>
-  <button class="auth-btn" id="authBtn" onclick="toggleAuth()">Sign in with Google</button>
-</div>
 
+<div class="top-app-header">
+  <button class="menu-btn" onclick="toggleActionMenu()" title="Options">⋮</button>
+  <div class="dropdown-menu" id="actionMenu">
+    <button onclick="openManageModal()">📋 Manage & Delete Logs</button>
+    <button onclick="openThemeModal()">🎨 Change Theme & Colors</button>
+  </div>
+  <div class="auth-bar">
+    <div class="user-info" id="userInfo"><span>🔒 Guest (Offline)</span></div>
+    <button class="auth-btn" id="authBtn" onclick="toggleAuth()">Sign in with Google</button>
+  </div>
+</div>
 <div class="bar">
   <select id="saveSelector" onchange="switchProfile(this.value)"></select>
   <button class="plus-btn" onclick="addProfile()">+</button>
@@ -199,19 +252,10 @@
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
 
-<!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
-  <div class="section-header">
-    <h3>Record Activity</h3>
-    <button class="menu-btn" onclick="toggleActionMenu()">⋮</button>
-    <div class="dropdown-menu" id="actionMenu">
-      <button onclick="openManageModal()">📋 Manage & Delete Logs</button>
-      <button onclick="openThemeModal()">🎨 Change Theme</button>
-    </div>
-  </div>
+  <h3 style="margin-bottom:10px;">Record Activity</h3>
 
   <form id="formLog">
-    <!-- Live Search Filter for Activities -->
     <input type="text" id="actSearchInput" placeholder="🔍 Search activity (e.g. Work, Read)..." oninput="filterActivities()">
     <select id="selectAct" required></select>
     <input type="number" id="inputDuration" placeholder="Count / Duration (e.g. 1 or 30)" step="any" required>
@@ -222,7 +266,6 @@
   <div class="list" id="listHistory"></div>
 </div>
 
-<!-- Tab 2: Stock-Market Style Charts -->
 <div id="tabCharts" class="tab card">
   <h3>Financial & Routine Trends</h3>
   <div class="chart-filter-bar">
@@ -248,13 +291,11 @@
   </div>
 </div>
 
-<!-- Tab 3: Daily Report -->
 <div id="tabReport" class="tab card">
   <h3>Daily Performance Summary</h3>
   <div id="reportList" style="max-height: 380px; overflow-y: auto;"></div>
 </div>
 
-<!-- Tab 4: Notes & Unlimited Folders -->
 <div id="tabNotes" class="tab card">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
     <h3>Folders & Notes</h3>
@@ -272,7 +313,6 @@
   <div id="notesContainer" style="max-height: 320px; overflow-y: auto;"></div>
 </div>
 
-<!-- Tab 5: Dynamic Categories -->
 <div id="tabCategories" class="tab card">
   <h3>Add New Category</h3>
   <form id="formCategory">
@@ -283,7 +323,6 @@
   <div class="list" id="listCategories"></div>
 </div>
 
-<!-- Tab 6: Rates -->
 <div id="tabRates" class="tab card">
   <h3>Add Rate</h3>
   <form id="formRate">
@@ -306,7 +345,6 @@
   <div class="list" id="listRates"></div>
 </div>
 
-<!-- Tab 7: Levels -->
 <div id="tabLevels" class="tab card">
   <h3>Define Level</h3>
   <form id="formLevel">
@@ -321,10 +359,9 @@
   <div class="list" id="listLevels"></div>
 </div>
 
-<!-- Modal: Manage & Delete Logs (Safe Mode) -->
 <div class="modal-overlay" id="manageModal">
   <div class="modal-content">
-    <div class="section-header">
+    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h3>Manage & Delete Records</h3>
       <button class="menu-btn" onclick="closeManageModal()">✕</button>
     </div>
@@ -333,20 +370,24 @@
   </div>
 </div>
 
-<!-- Modal: Theme Selection -->
 <div class="modal-overlay" id="themeModal">
   <div class="modal-content">
-    <div class="section-header">
+    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h3>Appearance & Theme</h3>
       <button class="menu-btn" onclick="closeThemeModal()">✕</button>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
       <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #38bdf8;" onclick="setAppTheme('default')">Cyber Midnight (Default)</button>
       <button class="btn" style="background:#000000; color:#ffffff; border:1px solid #333;" onclick="setAppTheme('theme-pitch-dark')">Pure Pitch Dark (OLED)</button>
+      <button class="btn" style="background:#1e293b; color:#94a3b8; border:1px solid #475569;" onclick="setAppTheme('theme-slate-grey')">Deep Slate Grey</button>
       <button class="btn" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setAppTheme('theme-light-white')">Clean Minimal White</button>
+      <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e2d9cc;" onclick="setAppTheme('theme-warm-paper')">Warm Paper Cream</button>
+      <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setAppTheme('theme-ice-silver')">Soft Ice Silver</button>
       <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #f43f5e;" onclick="setAppTheme('theme-crimson-red')">Crimson Blood Red</button>
       <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #10b981;" onclick="setAppTheme('theme-emerald-green')">Emerald Forest Green</button>
       <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #a855f7;" onclick="setAppTheme('theme-royal-purple')">Royal Luxury Purple</button>
+      <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #f59e0b;" onclick="setAppTheme('theme-sunset-gold')">Cyberpunk Sunset Gold</button>
+      <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #14b8a6;" onclick="setAppTheme('theme-deep-teal')">Ocean Deep Teal</button>
     </div>
   </div>
 </div>
@@ -412,6 +453,14 @@ function getCur() {
   const cur = store.profiles[store.active];
   if (!cur.dailyTarget) cur.dailyTarget = 100;
   if (!cur.streakHistory) cur.streakHistory = {};
+
+  // Auto clean-up stuck / ghost data if logs are empty and balance <= 0
+  if ((!cur.logs || cur.logs.length === 0) && cur.balance <= 0) {
+    cur.balance = 0;
+    cur.streak = 0;
+    cur.lastActiveDate = "";
+    cur.streakHistory = {};
+  }
   return cur;
 }
 
@@ -493,7 +542,6 @@ function checkAndUpdateStreakOnEarn() {
   }
 }
 
-// Complete Recalculation on Activity Deletion
 function recalculateStreakAfterDeletion(deletedDateOnly, deletedIsoDate) {
   const cur = getCur();
   const dateIso = deletedIsoDate || getIndianDateTime().isoDate;
@@ -520,14 +568,16 @@ function recalculateStreakAfterDeletion(deletedDateOnly, deletedIsoDate) {
 }
 
 function getLeaderboardRanks() {
+  const cur = getCur();
+  const curStreak = cur.streak || 0;
+  if (curStreak === 0) return null;
+
   const list = Object.keys(store.profiles).map(name => ({
     name,
     streak: store.profiles[name].streak || 0
-  })).sort((a, b) => b.streak - a.streak);
+  })).filter(p => p.streak > 0).sort((a, b) => b.streak - a.streak);
 
-  const curStreak = getCur().streak || 0;
-  if (curStreak === 0) return null;
-
+  if (list.length === 0) return null;
   if (list[0] && list[0].streak === curStreak) return { rank: 1, text: "🥇 1st Highest", cls: "rank-1" };
   if (list[1] && list[1].streak === curStreak) return { rank: 2, text: "🥈 2nd Highest", cls: "rank-2" };
   if (list[2] && list[2].streak === curStreak) return { rank: 3, text: "🥉 3rd Highest", cls: "rank-3" };
@@ -563,7 +613,7 @@ auth.onAuthStateChanged(async (user) => {
 
   if (user) {
     info.innerHTML = `
-      <img class="user-avatar" src="${user.photoURL || 'https://via.placeholder.com/28'}" alt="Avatar">
+      <img class="user-avatar" src="${user.photoURL || 'https://via.placeholder.com/26'}" alt="Avatar">
       <span>${user.displayName ? user.displayName.split(' ')[0] : 'User'}</span>
     `;
     btn.innerText = "Logout";
@@ -945,14 +995,14 @@ function updateUI() {
   const selector = document.getElementById('saveSelector');
   selector.innerHTML = Object.keys(store.profiles).map(k => `<option value="${k}" ${k===store.active?'selected':''}>📂 ${k}</option>`).join('');
 
-  document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
+  document.getElementById('walletBalance').innerText = ``₹ ${cur.balance.toFixed(2)}`;
 
   document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
   const rankInfo = getLeaderboardRanks();
   const rankElem = document.getElementById('rankBadge');
   if (rankInfo) {
     rankElem.style.display = "inline-block";
-      rankElem.innerText = rankInfo.text;
+    rankElem.innerText = rankInfo.text;
     rankElem.className = `rank-badge ${rankInfo.cls}`;
   } else {
     rankElem.style.display = "none";
