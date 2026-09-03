@@ -225,11 +225,15 @@
       <select id="rateType"><option value="Earn">Earn (+)</option><option value="Spend">Spend (-)</option></select>
       <input type="number" id="rateVal" placeholder="₹ Rate" step="any" required>
     </div>
-    <select id="rateUnit">
+        <select id="rateUnit">
       <option value="Task">Per 1 Task</option>
       <option value="1 Min">Per 1 Minute</option>
       <option value="1 Hr">Per 1 Hour</option>
-    </select>
+      <option value="1 Day">Per 1 Day</option>
+      <option value="1 Week">Per 1 Week</option>
+      <option value="Event">Per 1 Event</option>
+        </select>
+    
     <button type="submit" class="btn">Save Rate</button>
   </form>
   <div class="list" id="listRates"></div>
