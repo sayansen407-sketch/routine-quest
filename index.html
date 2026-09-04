@@ -751,7 +751,7 @@ function updateUI() {
   document.getElementById('listRates').innerHTML = cur.acts.map((a, i) => `
     <div class="item">
       <div><strong>${a.name}</strong> <small style="color:var(--sub);">(${a.unit})</small></div>
-      <div><span class="${a.type==='Earn'?'earn':'spend'}">₹${a.rate}</span> <button class="del" onclick="if(cur.acts.length>1){cur.acts.splice(${i},1);persist();}">✕</button></div>
+      <div><span class="${a.type==='Earn'?'earn':'spend'}">₹${a.rate}</span> <button class="del" onclick="delRate(${i})">✕</button></div>
     </div>
   `).join('');
 
@@ -812,7 +812,13 @@ document.getElementById('formLevel').onsubmit = (e) => {
   persist();
   document.getElementById('formLevel').reset();
 };
-
+function delRate(i) {
+  let cur = getCur();
+  if (cur.acts.length <= 1) return alert("Must keep at least 1 rate!");
+  cur.acts.splice(i, 1);
+  persist();
+}
+  
 applyTheme();
 updateUI();
 </script>
