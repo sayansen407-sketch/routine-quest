@@ -160,7 +160,7 @@
   <button onclick="switchTab('tabRates', this)">Rates</button>
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
-<!-- Tab 1: Activity -->
+  <!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
   <!-- Sub-mode: Standard vs Time-bound -->
   <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -168,11 +168,20 @@
     <button type="button" id="btnModeTimebound" class="filter-btn" onclick="switchActMode('timebound')">Time-Bound Quest</button>
   </div>
 
-  <!-- Standard Form -->
+  <!-- Standard Form (Includes Live Productivity %) -->
   <form id="formLog">
     <input type="text" id="actSearchInput" placeholder="🔍 Search activity..." oninput="filterActivities()">
     <select id="selectAct" required></select>
     <input type="number" id="inputDuration" placeholder="Count / Duration" step="any" required>
+    
+    <div style="background:rgba(0,0,0,0.22); padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <label style="font-size:0.75rem; color:var(--sub);">Productivity</label>
+        <span id="stdProdDisplay" style="font-size:0.8rem; font-weight:800; color:var(--primary);">100%</span>
+      </div>
+      <input type="range" id="inputStdProd" min="10" max="100" value="100" step="5" oninput="document.getElementById('stdProdDisplay').innerText = this.value + '%'" style="margin:0; padding:0; height:6px;">
+    </div>
+
     <button type="submit" class="btn">+ Add Record</button>
   </form>
 
@@ -249,7 +258,7 @@
   <div class="list" id="listCategories"></div>
 </div>
 
-<!-- Tab 6: Rates -->
+<!-- Tab 6: Rates (Clean - No Productivity Input) -->
 <div id="tabRates" class="tab card">
   <form id="formRate">
     <input type="text" id="rateName" placeholder="Activity Name" required>
@@ -266,11 +275,6 @@
       <option value="1 Week">Per 1 Week</option>
       <option value="Event">Per 1 Event</option>
     </select>
-    <!-- Low Productivity Rate Divider / Reduction % -->
-    <div style="background:rgba(0,0,0,0.25); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
-      <small style="font-size:0.75rem; color:var(--sub);">Low Productivity Penalty / Reduction (%)</small>
-      <input type="number" id="rateLowPct" placeholder="e.g. 50 for 50% deduction" min="0" max="100" value="50" style="margin-top:4px;">
-    </div>
     <button type="submit" class="btn">Save Rate</button>
   </form>
   <div class="list" id="listRates"></div>
@@ -332,7 +336,7 @@
     </div>
   </div>
 </div>
-<script>
+  <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
   authDomain: "routine-quest-8613f.firebaseapp.com",
@@ -369,9 +373,9 @@ let store = JSON.parse(localStorage.getItem('rq_db')) || {
       lastActiveDate: "",
       streakHistory: {},
       acts: [
-        { id: 1, name: "Focus Work", category: "Work", type: "Earn", rate: 50, unit: "1 Hr", lowProdPct: 50 },
-        { id: 2, name: "Reading", category: "Study", type: "Earn", rate: 2, unit: "1 Min", lowProdPct: 40 },
-        { id: 3, name: "Distraction", category: "Distraction", type: "Spend", rate: 30, unit: "Task", lowProdPct: 0 }
+        { id: 1, name: "Focus Work", category: "Work", type: "Earn", rate: 50, unit: "1 Hr" },
+        { id: 2, name: "Reading", category: "Study", type: "Earn", rate: 2, unit: "1 Min" },
+        { id: 3, name: "Distraction", category: "Distraction", type: "Spend", rate: 30, unit: "Task" }
       ],
       lvls: [
         { lvl: 1, title: "Novice", target: 500 },
@@ -493,7 +497,6 @@ function handleTimeboundSubmit(e) {
     type: act.type,
     rate: act.rate,
     unit: act.unit,
-    lowProdPct: act.lowProdPct !== undefined ? act.lowProdPct : 50,
     startTime: st,
     endTime: et,
     totalMinutes: calculateDurationUnits(st, et, '1 Min'),
@@ -505,7 +508,7 @@ function handleTimeboundSubmit(e) {
   e.target.reset();
   updateQuestEstimatedPayout();
 }
-  function failQuest(id) {
+    function failQuest(id) {
   const cur = getCur();
   const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
   if (qIndex === -1) return;
@@ -553,15 +556,15 @@ function reviewQuest(id) {
       <input type="number" id="verifyActualMinutes" value="${Math.round(q.totalMinutes / 2)}" min="1" max="${q.totalMinutes}" oninput="calcVerifyPreview(${q.id})">
     </div>
 
-    <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">2. Productivity Level:</label>
-    <div style="display:flex; gap:8px; margin:6px 0 12px;">
-      <button type="button" id="btnProdFull" class="filter-btn active" onclick="setVerifyProdType('full', ${q.id})">100% Focused</button>
-      <button type="button" id="btnProdLow" class="filter-btn" onclick="setVerifyProdType('low', ${q.id})">Low Productivity (-${q.lowProdPct}%)</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">2. Productivity Level:</label>
+      <span id="verifyProdDisplay" style="font-size:0.85rem; font-weight:800; color:var(--primary);">100%</span>
     </div>
+    <input type="range" id="verifyProdSlider" min="10" max="100" value="100" step="5" oninput="updateVerifyProdSlider(this.value, ${q.id})" style="margin-bottom:14px; padding:0; height:6px;">
 
     <div style="background:var(--input); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); margin-bottom:14px;">
       <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-        <span>Final Reward:</span>
+        <span>Final Calculated Reward:</span>
         <b id="verifyFinalAmtDisplay" style="color:var(--earn); font-size:1.1rem;">+₹${q.estimatedAmt.toFixed(2)}</b>
       </div>
     </div>
@@ -572,7 +575,7 @@ function reviewQuest(id) {
   window.curVerifyingQuest = {
     id: q.id,
     durationType: 'full',
-    prodType: 'full',
+    prodPct: 100,
     actualMinutes: q.totalMinutes
   };
 
@@ -587,10 +590,9 @@ function setVerifyDurationType(type, qId) {
   calcVerifyPreview(qId);
 }
 
-function setVerifyProdType(type, qId) {
-  window.curVerifyingQuest.prodType = type;
-  document.getElementById('btnProdFull').classList.toggle('active', type === 'full');
-  document.getElementById('btnProdLow').classList.toggle('active', type === 'low');
+function updateVerifyProdSlider(val, qId) {
+  window.curVerifyingQuest.prodPct = parseFloat(val) || 100;
+  document.getElementById('verifyProdDisplay').innerText = `${val}%`;
   calcVerifyPreview(qId);
 }
 
@@ -611,11 +613,9 @@ function calcVerifyPreview(qId) {
   else if (q.unit === '1 Week') units = mins / (7 * 24 * 60);
   else if (q.unit === 'Task' || q.unit === 'Event') units = mins / q.totalMinutes;
 
-  let finalAmt = q.rate * units;
-  if (window.curVerifyingQuest.prodType === 'low') {
-    const penaltyPct = q.lowProdPct !== undefined ? q.lowProdPct : 50;
-    finalAmt = finalAmt * (1 - penaltyPct / 100);
-  }
+  let baseAmt = q.rate * units;
+  const prodFactor = (window.curVerifyingQuest.prodPct || 100) / 100;
+  const finalAmt = baseAmt * prodFactor;
 
   window.curVerifyingQuest.calculatedFinalAmt = finalAmt;
   document.getElementById('verifyFinalAmtDisplay').innerText = `+₹${finalAmt.toFixed(2)}`;
@@ -634,7 +634,7 @@ function confirmQuestReward(qId) {
   else cur.balance -= earnedAmt;
 
   const ist = getIST();
-  const prodTag = window.curVerifyingQuest.prodType === 'low' ? ` [Low Prod -${q.lowProdPct}%]` : '';
+  const prodTag = window.curVerifyingQuest.prodPct < 100 ? ` [${window.curVerifyingQuest.prodPct}% Prod]` : '';
   const durTag = window.curVerifyingQuest.durationType === 'partial' ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
 
   cur.logs.unshift({
@@ -656,8 +656,8 @@ function confirmQuestReward(qId) {
   closeModal('questVerifyModal');
   persist();
   updateUI();
-  }
-  function getIST() {
+    }
+      function getIST() {
   const now = new Date();
   const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
   const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
@@ -781,7 +781,7 @@ function addProfile() {
   n = n.trim();
   store.profiles[n] = {
     balance: 0, streak: 0, dailyTarget: 100, lastActiveDate: "", streakHistory: {},
-    acts: [{ id: 1, name: "Task", category: "General", type: "Earn", rate: 20, unit: "Task", lowProdPct: 50 }],
+    acts: [{ id: 1, name: "Task", category: "General", type: "Earn", rate: 20, unit: "Task" }],
     lvls: [{ lvl: 1, title: "Beginner", target: 500 }], pendingQuests: [], logs: []
   };
   store.active = n;
@@ -846,8 +846,8 @@ function delCat(i) {
   if (store.categories.length <= 1) return alert("Keep at least 1!");
   store.categories.splice(i, 1);
   persist();
-  }
-  function filterActivities() {
+    }
+    function filterActivities() {
   const q = (document.getElementById('actSearchInput').value || '').toLowerCase();
   const cur = getCur();
   const filtered = cur.acts.filter(a => a.name.toLowerCase().includes(q) || (a.category && a.category.toLowerCase().includes(q)));
@@ -1025,7 +1025,7 @@ function updateUI() {
       <div class="item">
         <div>
           <strong>${q.name}</strong> <span class="tag">🕒 ${q.startTime} - ${q.endTime}</span>
-          <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)} | Low: -${q.lowProdPct}%</small>
+          <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)}</small>
         </div>
         <div style="display:flex; gap:6px;">
           <button class="action-btn-tick" title="Complete Quest" onclick="reviewQuest(${q.id})">✓</button>
@@ -1054,7 +1054,6 @@ function updateUI() {
     <div class="item">
       <div>
         <strong>${a.name}</strong> <small style="color:var(--sub);">(${a.unit})</small>
-        <br><small style="color:var(--sub); font-size:0.7rem;">Low Prod Deduction: ${a.lowProdPct !== undefined ? a.lowProdPct : 50}%</small>
       </div>
       <div><span class="${a.type==='Earn'?'earn':'spend'}">₹${a.rate}</span> <button class="del" onclick="delRate(${i})">✕</button></div>
     </div>
@@ -1071,6 +1070,7 @@ function updateUI() {
   renderNotes();
 }
 
+// Standard Form Submission with Live Productivity %
 document.getElementById('formLog').onsubmit = (e) => {
   e.preventDefault();
   const cur = getCur();
@@ -1078,32 +1078,48 @@ document.getElementById('formLog').onsubmit = (e) => {
   if (!id) return alert("Select an activity!");
   const qty = parseFloat(document.getElementById('inputDuration').value);
   const act = cur.acts.find(a => a.id === id);
-  const total = act.rate * qty;
+  const prodPct = parseFloat(document.getElementById('inputStdProd').value) || 100;
+  
+  const baseTotal = act.rate * qty;
+  const finalTotal = baseTotal * (prodPct / 100);
 
-  if (act.type === 'Earn') cur.balance += total; else cur.balance -= total;
+  if (act.type === 'Earn') cur.balance += finalTotal; 
+  else cur.balance -= finalTotal;
+
   const ist = getIST();
+  const prodTag = prodPct < 100 ? ` [${prodPct}% Prod]` : '';
+
   cur.logs.unshift({
-    name: act.name, category: act.category || "General", type: act.type,
-    amt: total, qty, unit: act.unit, timestamp: Date.now(),
-    dateOnly: ist.dateOnly, timeString: ist.timeString, isoDate: ist.isoDate
+    name: `${act.name}${prodTag}`, 
+    category: act.category || "General", 
+    type: act.type,
+    amt: finalTotal, 
+    qty, 
+    unit: act.unit, 
+    timestamp: Date.now(),
+    dateOnly: ist.dateOnly, 
+    timeString: ist.timeString, 
+    isoDate: ist.isoDate
   });
+
   if (act.type === 'Earn') checkStreak();
   persist();
   document.getElementById('inputDuration').value = '';
+  document.getElementById('inputStdProd').value = '100';
+  document.getElementById('stdProdDisplay').innerText = '100%';
 };
 
+// Rates Form Submission (Clean - No Productivity Input)
 document.getElementById('formRate').onsubmit = (e) => {
   e.preventDefault();
   const cur = getCur();
-  const lowPct = parseFloat(document.getElementById('rateLowPct').value);
   cur.acts.push({
     id: Date.now(),
     name: document.getElementById('rateName').value,
     category: document.getElementById('rateCategorySelect').value,
     type: document.getElementById('rateType').value,
     rate: parseFloat(document.getElementById('rateVal').value),
-    unit: document.getElementById('rateUnit').value,
-    lowProdPct: !isNaN(lowPct) ? lowPct : 50
+    unit: document.getElementById('rateUnit').value
   });
   persist();
   document.getElementById('formRate').reset();
@@ -1133,3 +1149,4 @@ updateUI();
 </script>
 </body>
 </html>
+
