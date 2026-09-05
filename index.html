@@ -681,17 +681,18 @@ function changeDailyTarget() {
     persist();
   }
 }
-
 function getLeaderboard() {
-  const keys = Object.keys(store.profiles || {});
+  const keys = Object.keys(store.profiles || {}).filter(k => k && k !== "undefined" && k !== "null");
   if (keys.length < 2) return null;
-  const sorted = keys.map(k => ({ name: k, streak: store.profiles[k].streak || 0 })).sort((a, b) => b.streak - a.streak);
+  const sorted = keys.map(k => ({ name: k, streak: (store.profiles[k] && store.profiles[k].streak) || 0 })).sort((a, b) => b.streak - a.streak);
   const idx = sorted.findIndex(p => p.name === store.activeProfile);
   if (idx === 0) return { r: 1, t: "🥇 Top Streaker" };
   if (idx === 1) return { r: 2, t: "🥈 2nd Place" };
   if (idx === 2) return { r: 3, t: "🥉 3rd Place" };
   return null;
 }
+  
+
 
 // --- Categories, Rates & Notes Forms ---
 document.getElementById('formCategory').onsubmit = (e) => {
@@ -990,7 +991,15 @@ function renderNotes() {
 // --- Main UI Rendering Loop ---
 function updateUI() {
   const cur = getCur();
-  document.getElementById('saveSelector').innerHTML = Object.keys(store.profiles || {}).map(k => `<option value="${k}" ${k === store.activeProfile ? 'selected' : ''}>${k}</option>`).join('');
+    if (store.profiles) {
+    delete store.profiles["undefined"];
+    delete store.profiles["null"];
+    delete store.profiles["1"];
+    delete store.profiles[""];
+  }
+  const validProfiles = Object.keys(store.profiles || {}).filter(k => k && k !== "undefined" && k !== "null" && k !== "1");
+  document.getElementById('saveSelector').innerHTML = validProfiles.map(k => `<option value="${k}" ${k === store.activeProfile ? 'selected' : ''}>${k}</option>`).join('');
+  
   document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
   document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
 
