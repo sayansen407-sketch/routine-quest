@@ -93,7 +93,7 @@
   form { display: flex; flex-direction: column; gap: 10px; }
   input, select, textarea { width: 100%; padding: 12px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.1); background: var(--input); color: var(--text); font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
   input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
-  .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 11px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 16px var(--primary-glow); transition: transform 0.15s; }
+  .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 11px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 16px var(--primary-glow); transition: transform 0.15s; text-align: center; }
   .btn:active { transform: scale(0.97); }
 
   .filter-bar { display: flex; gap: 5px; margin-bottom: 12px; background: var(--input); padding: 4px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.06); }
@@ -107,6 +107,9 @@
   .spend { color: var(--spend); font-weight: 900; text-shadow: 0 0 10px rgba(244,63,94,0.35); }
   .tag { font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; background: rgba(56,189,248,0.18); color: var(--primary); margin-left: 6px; font-weight: 800; border: 1px solid rgba(56,189,248,0.3); }
   .del { background: rgba(244,63,94,0.18); color: var(--spend); border: 1px solid rgba(244,63,94,0.4); padding: 5px 9px; border-radius: 7px; cursor: pointer; font-size: 0.75rem; font-weight: 800; }
+
+  .action-btn-tick { background: rgba(16,185,129,0.2); border: 1px solid var(--earn); color: var(--earn); font-weight: 900; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+  .action-btn-cross { background: rgba(244,63,94,0.2); border: 1px solid var(--spend); color: var(--spend); font-weight: 900; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
 
   .folder-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
   .folder-btn { background: var(--input); border: 1px solid var(--border); color: var(--sub); padding: 6px 13px; border-radius: 9px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-weight: 800; }
@@ -157,15 +160,45 @@
   <button onclick="switchTab('tabRates', this)">Rates</button>
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
-
 <!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
+  <!-- Sub-mode: Standard vs Time-bound -->
+  <div style="display:flex; gap:8px; margin-bottom:12px;">
+    <button type="button" id="btnModeStandard" class="filter-btn active" onclick="switchActMode('standard')">Standard Log</button>
+    <button type="button" id="btnModeTimebound" class="filter-btn" onclick="switchActMode('timebound')">Time-Bound Quest</button>
+  </div>
+
+  <!-- Standard Form -->
   <form id="formLog">
-    <input type="text" id="actSearchInput" placeholder="🔍 Search activity (e.g. Work, Gym)..." oninput="filterActivities()">
+    <input type="text" id="actSearchInput" placeholder="🔍 Search activity..." oninput="filterActivities()">
     <select id="selectAct" required></select>
-    <input type="number" id="inputDuration" placeholder="Count / Duration (e.g. 1 or 30)" step="any" required>
+    <input type="number" id="inputDuration" placeholder="Count / Duration" step="any" required>
     <button type="submit" class="btn">+ Add Record</button>
   </form>
+
+  <!-- Time-Bound Quest Form -->
+  <form id="formTimebound" style="display:none;" onsubmit="handleTimeboundSubmit(event)">
+    <select id="selectQuestRate" required onchange="updateQuestEstimatedPayout()"></select>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div>
+        <label style="font-size:0.75rem; color:var(--sub);">Start Time</label>
+        <input type="time" id="questStartTime" required onchange="updateQuestEstimatedPayout()">
+      </div>
+      <div>
+        <label style="font-size:0.75rem; color:var(--sub);">End Time</label>
+        <input type="time" id="questEndTime" required onchange="updateQuestEstimatedPayout()">
+      </div>
+    </div>
+    <div style="font-size:0.8rem; color:var(--earn); font-weight:700; margin-bottom:4px;" id="questEstimatedDisplay">Estimated: ₹0.00</div>
+    <button type="submit" class="btn">+ Schedule Quest</button>
+  </form>
+
+  <!-- Pending Scheduled Tasks -->
+  <div id="pendingQuestsBox" style="margin-top:14px; display:none;">
+    <h4 style="font-size:0.85rem; color:var(--primary); margin-bottom:6px;">Active Scheduled Tasks</h4>
+    <div class="list" id="listPendingQuests"></div>
+  </div>
+
   <h4 style="margin-top:14px; font-size:0.88rem; color:var(--sub);">Recent Logs (Protected)</h4>
   <div class="list" id="listHistory"></div>
 </div>
@@ -210,7 +243,7 @@
 <!-- Tab 5: Categories -->
 <div id="tabCategories" class="tab card">
   <form id="formCategory">
-    <input type="text" id="catInput" placeholder="Category Name (e.g. Study, Gym, Work)" required>
+    <input type="text" id="catInput" placeholder="Category Name" required>
     <button type="submit" class="btn">+ Add Category</button>
   </form>
   <div class="list" id="listCategories"></div>
@@ -225,15 +258,19 @@
       <select id="rateType"><option value="Earn">Earn (+)</option><option value="Spend">Spend (-)</option></select>
       <input type="number" id="rateVal" placeholder="₹ Rate" step="any" required>
     </div>
-        <select id="rateUnit">
+    <select id="rateUnit">
       <option value="Task">Per 1 Task</option>
       <option value="1 Min">Per 1 Minute</option>
       <option value="1 Hr">Per 1 Hour</option>
       <option value="1 Day">Per 1 Day</option>
       <option value="1 Week">Per 1 Week</option>
       <option value="Event">Per 1 Event</option>
-        </select>
-    
+    </select>
+    <!-- Low Productivity Rate Divider / Reduction % -->
+    <div style="background:rgba(0,0,0,0.25); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+      <small style="font-size:0.75rem; color:var(--sub);">Low Productivity Penalty / Reduction (%)</small>
+      <input type="number" id="rateLowPct" placeholder="e.g. 50 for 50% deduction" min="0" max="100" value="50" style="margin-top:4px;">
+    </div>
     <button type="submit" class="btn">Save Rate</button>
   </form>
   <div class="list" id="listRates"></div>
@@ -253,8 +290,846 @@
 </div>
 
 <!-- Modals -->
+<div class="modal" id="questVerifyModal">
+  <div class="modal-body">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h4 style="color:var(--earn);">✓ Quest Review</h4>
+      <button class="target-btn" onclick="closeModal('questVerifyModal')">✕</button>
+    </div>
+    <div id="questVerifyContent"></div>
+  </div>
+</div>
+
 <div class="modal" id="manageModal">
   <div class="modal-body">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h4>Manage & Delete Logs</h4>
-      <button class="target-btn" onclic
+      <button class="target-btn" onclick="closeModal('manageModal')">✕</button>
+    </div>
+    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:10px;">Safe Delete: Recalculates Net Balance, Streak progress, and Charts automatically.</p>
+    <div class="list" id="manageLogsList"></div>
+  </div>
+</div>
+
+<div class="modal" id="themeModal">
+  <div class="modal-body">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h4>Appearance & Themes</h4>
+      <button class="target-btn" onclick="closeModal('themeModal')">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #38bdf8;" onclick="setTheme('default')">Cyber Midnight (Default)</button>
+      <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-pitch-dark')">Pitch Dark (OLED)</button>
+      <button class="btn" style="background:#1e293b; color:#94a3b8;" onclick="setTheme('theme-slate-grey')">Deep Slate Grey</button>
+      <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light-white')">Minimal White</button>
+      <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e2d9cc;" onclick="setTheme('theme-warm-paper')">Warm Paper Cream</button>
+      <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-ice-silver')">Soft Ice Silver</button>
+      <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #f43f5e;" onclick="setTheme('theme-crimson-red')">Crimson Blood Red</button>
+      <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #10b981;" onclick="setTheme('theme-emerald-green')">Emerald Forest Green</button>
+      <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #a855f7;" onclick="setTheme('theme-royal-purple')">Royal Luxury Purple</button>
+      <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #f59e0b;" onclick="setTheme('theme-sunset-gold')">Cyberpunk Sunset Gold</button>
+      <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #14b8a6;" onclick="setTheme('theme-deep-teal')">Ocean Deep Teal</button>
+    </div>
+  </div>
+</div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
+  authDomain: "routine-quest-8613f.firebaseapp.com",
+  projectId: "routine-quest-8613f",
+  storageBucket: "routine-quest-8613f.firebasestorage.app",
+  messagingSenderId: "461797030515",
+  appId: "1:461797030515:web:071645a001e08f228a4806",
+  measurementId: "G-JW5KHNGRC8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let trendChart = null;
+let streakChart = null;
+let catChart = null;
+let chartFilter = '1W';
+let activeFolder = "General";
+let activeActMode = "standard";
+
+let store = JSON.parse(localStorage.getItem('rq_db')) || {
+  active: "Default",
+  theme: "default",
+  categories: ["General", "Study", "Fitness", "Work", "Distraction"],
+  folders: ["General", "Ideas"],
+  notes: [],
+  profiles: {
+    "Default": {
+      balance: 0,
+      streak: 0,
+      dailyTarget: 100,
+      lastActiveDate: "",
+      streakHistory: {},
+      acts: [
+        { id: 1, name: "Focus Work", category: "Work", type: "Earn", rate: 50, unit: "1 Hr", lowProdPct: 50 },
+        { id: 2, name: "Reading", category: "Study", type: "Earn", rate: 2, unit: "1 Min", lowProdPct: 40 },
+        { id: 3, name: "Distraction", category: "Distraction", type: "Spend", rate: 30, unit: "Task", lowProdPct: 0 }
+      ],
+      lvls: [
+        { lvl: 1, title: "Novice", target: 500 },
+        { lvl: 2, title: "Disciplined", target: 1500 },
+        { lvl: 3, title: "Master", target: 3500 }
+      ],
+      pendingQuests: [],
+      logs: []
+    }
+  }
+};
+
+if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
+if (!store.folders) store.folders = ["General", "Ideas"];
+if (!store.notes) store.notes = [];
+
+function getCur() {
+  if (!store.profiles || typeof store.profiles !== 'object') {
+    store.profiles = { "Default": { balance: 0, streak: 0, dailyTarget: 100, lastActiveDate: "", streakHistory: {}, acts: [], lvls: [], pendingQuests: [], logs: [] } };
+  }
+  if (!store.profiles[store.active]) store.active = Object.keys(store.profiles)[0] || "Default";
+  const cur = store.profiles[store.active];
+  if (!cur.dailyTarget) cur.dailyTarget = 100;
+  if (!cur.streakHistory) cur.streakHistory = {};
+  if (!cur.pendingQuests) cur.pendingQuests = [];
+  if ((!cur.logs || cur.logs.length === 0) && cur.balance <= 0) {
+    cur.balance = 0;
+    cur.streak = 0;
+    cur.lastActiveDate = "";
+    cur.streakHistory = {};
+  }
+  return cur;
+}
+
+function applyTheme() {
+  document.body.className = '';
+  if (store.theme && store.theme !== 'default') document.body.classList.add(store.theme);
+}
+
+function setTheme(t) {
+  store.theme = t;
+  applyTheme();
+  persist();
+  closeModal('themeModal');
+}
+
+function toggleMenu() { document.getElementById('menuDropdown').classList.toggle('show'); }
+window.addEventListener('click', (e) => {
+  if (!e.target.matches('.menu-btn')) {
+    const m = document.getElementById('menuDropdown');
+    if (m && m.classList.contains('show')) m.classList.remove('show');
+  }
+});
+
+function openModal(id) {
+  const m = document.getElementById('menuDropdown');
+  if (m) m.classList.remove('show');
+  if (id === 'manageModal') renderManageList();
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function switchActMode(mode) {
+  activeActMode = mode;
+  document.getElementById('btnModeStandard').classList.toggle('active', mode === 'standard');
+  document.getElementById('btnModeTimebound').classList.toggle('active', mode === 'timebound');
+  document.getElementById('formLog').style.display = mode === 'standard' ? 'flex' : 'none';
+  document.getElementById('formTimebound').style.display = mode === 'timebound' ? 'flex' : 'none';
+  document.getElementById('pendingQuestsBox').style.display = mode === 'timebound' ? 'block' : 'none';
+}
+
+function calculateDurationUnits(startTime, endTime, unit) {
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+  let startMin = sh * 60 + sm;
+  let endMin = eh * 60 + em;
+  if (endMin < startMin) endMin += 24 * 60;
+  const diffMinutes = Math.max(1, endMin - startMin);
+
+  if (unit === '1 Min') return diffMinutes;
+  if (unit === '1 Hr') return diffMinutes / 60;
+  if (unit === '1 Day') return diffMinutes / (24 * 60);
+  if (unit === '1 Week') return diffMinutes / (7 * 24 * 60);
+  return 1;
+}
+
+function updateQuestEstimatedPayout() {
+  const cur = getCur();
+  const actId = parseInt(document.getElementById('selectQuestRate').value);
+  const act = cur.acts.find(a => a.id === actId);
+  const st = document.getElementById('questStartTime').value;
+  const et = document.getElementById('questEndTime').value;
+  if (!act || !st || !et) {
+    document.getElementById('questEstimatedDisplay').innerText = `Estimated: ₹0.00`;
+    return;
+  }
+  const units = calculateDurationUnits(st, et, act.unit);
+  const total = act.rate * units;
+  document.getElementById('questEstimatedDisplay').innerText = `Estimated: ${act.type === 'Earn' ? '+' : '-'}₹${total.toFixed(2)}`;
+}
+
+function handleTimeboundSubmit(e) {
+  e.preventDefault();
+  const cur = getCur();
+  const actId = parseInt(document.getElementById('selectQuestRate').value);
+  const act = cur.acts.find(a => a.id === actId);
+  const st = document.getElementById('questStartTime').value;
+  const et = document.getElementById('questEndTime').value;
+  if (!act || !st || !et) return;
+
+  const units = calculateDurationUnits(st, et, act.unit);
+  const estimatedAmt = act.rate * units;
+
+  cur.pendingQuests.unshift({
+    id: Date.now(),
+    actId: act.id,
+    name: act.name,
+    category: act.category || "General",
+    type: act.type,
+    rate: act.rate,
+    unit: act.unit,
+    lowProdPct: act.lowProdPct !== undefined ? act.lowProdPct : 50,
+    startTime: st,
+    endTime: et,
+    totalMinutes: calculateDurationUnits(st, et, '1 Min'),
+    estimatedAmt: estimatedAmt
+  });
+
+  persist();
+  updateUI();
+  e.target.reset();
+  updateQuestEstimatedPayout();
+}
+  function failQuest(id) {
+  const cur = getCur();
+  const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
+  if (qIndex === -1) return;
+  const q = cur.pendingQuests[qIndex];
+
+  if (!confirm(`Mark "${q.name}" as Failed? ₹${q.estimatedAmt.toFixed(1)} will be deducted.`)) return;
+
+  cur.balance -= q.estimatedAmt;
+  const ist = getIST();
+  cur.logs.unshift({
+    name: `${q.name} (Missed Task)`,
+    category: q.category || "General",
+    type: "Spend",
+    amt: q.estimatedAmt,
+    qty: 1,
+    unit: q.unit,
+    timestamp: Date.now(),
+    dateOnly: ist.dateOnly,
+    timeString: ist.timeString,
+    isoDate: ist.isoDate
+  });
+
+  cur.pendingQuests.splice(qIndex, 1);
+  persist();
+  updateUI();
+}
+
+function reviewQuest(id) {
+  const cur = getCur();
+  const q = cur.pendingQuests.find(item => item.id === id);
+  if (!q) return;
+
+  const modalBody = document.getElementById('questVerifyContent');
+  modalBody.innerHTML = `
+    <p style="font-size:0.85rem; margin-bottom:12px;"><strong>Task:</strong> ${q.name} <span class="tag">${q.startTime} - ${q.endTime}</span></p>
+    
+    <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">1. Duration Completion:</label>
+    <div style="display:flex; gap:8px; margin:6px 0 12px;">
+      <button type="button" id="btnDurFull" class="filter-btn active" onclick="setVerifyDurationType('full', ${q.id})">Full Time (${q.totalMinutes}m)</button>
+      <button type="button" id="btnDurPartial" class="filter-btn" onclick="setVerifyDurationType('partial', ${q.id})">Partial Time</button>
+    </div>
+
+    <div id="partialInputBox" style="display:none; margin-bottom:12px;">
+      <label style="font-size:0.75rem; color:var(--sub);">Actual Minutes Spent:</label>
+      <input type="number" id="verifyActualMinutes" value="${Math.round(q.totalMinutes / 2)}" min="1" max="${q.totalMinutes}" oninput="calcVerifyPreview(${q.id})">
+    </div>
+
+    <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">2. Productivity Level:</label>
+    <div style="display:flex; gap:8px; margin:6px 0 12px;">
+      <button type="button" id="btnProdFull" class="filter-btn active" onclick="setVerifyProdType('full', ${q.id})">100% Focused</button>
+      <button type="button" id="btnProdLow" class="filter-btn" onclick="setVerifyProdType('low', ${q.id})">Low Productivity (-${q.lowProdPct}%)</button>
+    </div>
+
+    <div style="background:var(--input); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+        <span>Final Reward:</span>
+        <b id="verifyFinalAmtDisplay" style="color:var(--earn); font-size:1.1rem;">+₹${q.estimatedAmt.toFixed(2)}</b>
+      </div>
+    </div>
+
+    <button class="btn" style="width:100%;" onclick="confirmQuestReward(${q.id})">Claim Reward</button>
+  `;
+
+  window.curVerifyingQuest = {
+    id: q.id,
+    durationType: 'full',
+    prodType: 'full',
+    actualMinutes: q.totalMinutes
+  };
+
+  openModal('questVerifyModal');
+}
+
+function setVerifyDurationType(type, qId) {
+  window.curVerifyingQuest.durationType = type;
+  document.getElementById('btnDurFull').classList.toggle('active', type === 'full');
+  document.getElementById('btnDurPartial').classList.toggle('active', type === 'partial');
+  document.getElementById('partialInputBox').style.display = type === 'partial' ? 'block' : 'none';
+  calcVerifyPreview(qId);
+}
+
+function setVerifyProdType(type, qId) {
+  window.curVerifyingQuest.prodType = type;
+  document.getElementById('btnProdFull').classList.toggle('active', type === 'full');
+  document.getElementById('btnProdLow').classList.toggle('active', type === 'low');
+  calcVerifyPreview(qId);
+}
+
+function calcVerifyPreview(qId) {
+  const cur = getCur();
+  const q = cur.pendingQuests.find(item => item.id === qId);
+  if (!q) return;
+
+  let mins = q.totalMinutes;
+  if (window.curVerifyingQuest.durationType === 'partial') {
+    mins = parseFloat(document.getElementById('verifyActualMinutes').value) || 1;
+  }
+  window.curVerifyingQuest.actualMinutes = mins;
+
+  let units = mins;
+  if (q.unit === '1 Hr') units = mins / 60;
+  else if (q.unit === '1 Day') units = mins / (24 * 60);
+  else if (q.unit === '1 Week') units = mins / (7 * 24 * 60);
+  else if (q.unit === 'Task' || q.unit === 'Event') units = mins / q.totalMinutes;
+
+  let finalAmt = q.rate * units;
+  if (window.curVerifyingQuest.prodType === 'low') {
+    const penaltyPct = q.lowProdPct !== undefined ? q.lowProdPct : 50;
+    finalAmt = finalAmt * (1 - penaltyPct / 100);
+  }
+
+  window.curVerifyingQuest.calculatedFinalAmt = finalAmt;
+  document.getElementById('verifyFinalAmtDisplay').innerText = `+₹${finalAmt.toFixed(2)}`;
+}
+
+function confirmQuestReward(qId) {
+  const cur = getCur();
+  const qIndex = cur.pendingQuests.findIndex(item => item.id === qId);
+  if (qIndex === -1) return;
+  const q = cur.pendingQuests[qIndex];
+
+  calcVerifyPreview(qId);
+  const earnedAmt = window.curVerifyingQuest.calculatedFinalAmt !== undefined ? window.curVerifyingQuest.calculatedFinalAmt : q.estimatedAmt;
+
+  if (q.type === 'Earn') cur.balance += earnedAmt;
+  else cur.balance -= earnedAmt;
+
+  const ist = getIST();
+  const prodTag = window.curVerifyingQuest.prodType === 'low' ? ` [Low Prod -${q.lowProdPct}%]` : '';
+  const durTag = window.curVerifyingQuest.durationType === 'partial' ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
+
+  cur.logs.unshift({
+    name: `${q.name}${durTag}${prodTag}`,
+    category: q.category || "General",
+    type: q.type,
+    amt: earnedAmt,
+    qty: 1,
+    unit: q.unit,
+    timestamp: Date.now(),
+    dateOnly: ist.dateOnly,
+    timeString: ist.timeString,
+    isoDate: ist.isoDate
+  });
+
+  if (q.type === 'Earn') checkStreak();
+
+  cur.pendingQuests.splice(qIndex, 1);
+  closeModal('questVerifyModal');
+  persist();
+  updateUI();
+  }
+  function getIST() {
+  const now = new Date();
+  const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
+  const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
+  const isoDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  return { dateOnly, timeString: `${dateOnly} • ${timeOnly}`, isoDate };
+}
+
+function getTodayEarned() {
+  const cur = getCur();
+  const today = getIST().dateOnly;
+  return (cur.logs || []).filter(l => l.dateOnly === today && l.type === 'Earn').reduce((s, l) => s + l.amt, 0);
+}
+
+function checkStreak() {
+  const cur = getCur();
+  const todayIso = getIST().isoDate;
+  if (getTodayEarned() >= cur.dailyTarget) {
+    if (cur.lastActiveDate !== todayIso) {
+      if (!cur.lastActiveDate) cur.streak = 1;
+      else {
+        const diff = Math.round((new Date(todayIso) - new Date(cur.lastActiveDate)) / 86400000);
+        if (diff === 1) cur.streak += 1;
+        else if (diff > 1) cur.streak = 1;
+      }
+      cur.lastActiveDate = todayIso;
+    }
+    cur.streakHistory[todayIso] = cur.streak;
+  }
+}
+
+function recalcStreakOnDelete(dOnly, dIso) {
+  const cur = getCur();
+  const iso = dIso || getIST().isoDate;
+  const dayEarn = (cur.logs || []).filter(l => (l.dateOnly === dOnly || l.isoDate === iso) && l.type === 'Earn').reduce((s, l) => s + l.amt, 0);
+  if (dayEarn < cur.dailyTarget) {
+    delete cur.streakHistory[iso];
+    if (cur.lastActiveDate === iso) {
+      const rem = Object.keys(cur.streakHistory).sort();
+      if (rem.length > 0) {
+        const prev = rem[rem.length - 1];
+        cur.lastActiveDate = prev;
+        cur.streak = cur.streakHistory[prev] || 0;
+      } else {
+        cur.lastActiveDate = "";
+        cur.streak = 0;
+      }
+    }
+  }
+}
+
+function getLeaderboard() {
+  const cur = getCur();
+  if (!cur.streak || cur.streak === 0) return null;
+  const list = Object.keys(store.profiles).map(n => ({ n, s: store.profiles[n].streak || 0 })).filter(p => p.s > 0).sort((a, b) => b.s - a.s);
+  if (!list.length) return null;
+  if (list[0] && list[0].s === cur.streak) return { t: "🥇 1st Highest", c: "rank-1" };
+  if (list[1] && list[1].s === cur.streak) return { t: "🥈 2nd Highest", c: "rank-2" };
+  if (list[2] && list[2].s === cur.streak) return { t: "🥉 3rd Highest", c: "rank-3" };
+  return null;
+}
+
+function changeDailyTarget() {
+  const cur = getCur();
+  let v = prompt("Set Daily Target ₹:", cur.dailyTarget || 100);
+  if (v && !isNaN(v) && parseFloat(v) > 0) {
+    cur.dailyTarget = parseFloat(v);
+    checkStreak();
+    persist();
+  }
+}
+
+async function persist() {
+  localStorage.setItem('rq_db', JSON.stringify(store));
+  if (currentUser && db) {
+    try { await db.collection("users").doc(currentUser.uid).set(store); } catch (e) { console.error(e); }
+  }
+  updateUI();
+}
+
+auth.onAuthStateChanged(async (user) => {
+  currentUser = user;
+  const info = document.getElementById("userInfo");
+  const btn = document.getElementById("authBtn");
+  if (user) {
+    info.innerHTML = `<img class="user-avatar" src="${user.photoURL || 'https://via.placeholder.com/26'}"><span>${user.displayName ? user.displayName.split(' ')[0] : 'User'}</span>`;
+    btn.innerText = "Logout";
+    try {
+      const doc = await db.collection("users").doc(user.uid).get();
+      if (doc.exists) {
+        store = doc.data();
+        if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
+        if (!store.folders) store.folders = ["General", "Ideas"];
+        if (!store.notes) store.notes = [];
+        localStorage.setItem('rq_db', JSON.stringify(store));
+      } else await db.collection("users").doc(user.uid).set(store);
+    } catch (err) { console.error(err); }
+  } else {
+    info.innerHTML = `<span>🔒 Guest</span>`;
+    btn.innerText = "Login";
+  }
+  applyTheme();
+  updateUI();
+});
+
+function toggleAuth() {
+  if (currentUser) auth.signOut();
+  else auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message));
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'tabCharts') renderCharts();
+}
+
+function addProfile() {
+  let n = prompt("Profile Name:");
+  if (!n || !n.trim() || store.profiles[n.trim()]) return;
+  n = n.trim();
+  store.profiles[n] = {
+    balance: 0, streak: 0, dailyTarget: 100, lastActiveDate: "", streakHistory: {},
+    acts: [{ id: 1, name: "Task", category: "General", type: "Earn", rate: 20, unit: "Task", lowProdPct: 50 }],
+    lvls: [{ lvl: 1, title: "Beginner", target: 500 }], pendingQuests: [], logs: []
+  };
+  store.active = n;
+  persist();
+}
+
+function switchProfile(n) { if (store.profiles[n]) { store.active = n; persist(); } }
+
+function createFolder() {
+  let n = prompt("Folder Name:");
+  if (!n || !n.trim() || store.folders.includes(n.trim())) return;
+  store.folders.push(n.trim());
+  activeFolder = n.trim();
+  persist();
+}
+
+document.getElementById('formNote').onsubmit = (e) => {
+  e.preventDefault();
+  const t = document.getElementById('noteTitle').value.trim();
+  const c = document.getElementById('noteContent').value.trim();
+  if (!t || !c) return;
+  store.notes.unshift({ id: Date.now(), folder: activeFolder, title: t, content: c, time: getIST().timeString });
+  persist();
+  document.getElementById('formNote').reset();
+};
+
+function delNote(id) {
+  if (confirm("Delete note?")) {
+    store.notes = store.notes.filter(n => n.id !== id);
+    persist();
+  }
+}
+
+function renderNotes() {
+  document.getElementById('folderList').innerHTML = store.folders.map(f => `
+    <button class="folder-btn ${f === activeFolder ? 'active' : ''}" onclick="activeFolder='${f}';renderNotes();">📁 ${f}</button>
+  `).join('');
+  const list = store.notes.filter(n => n.folder === activeFolder);
+  document.getElementById('notesContainer').innerHTML = !list.length ? '<p style="color:var(--sub);font-size:0.75rem;padding:6px;">No notes.</p>' :
+    list.map(n => `
+      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <strong style="color:var(--primary);">${n.title}</strong>
+          <button class="del" onclick="delNote(${n.id})">✕</button>
+        </div>
+        <div style="font-size:0.8rem; white-space:pre-wrap; line-height:1.4;">${n.content}</div>
+        <small style="color:var(--sub); font-size:0.68rem;">🕒 ${n.time}</small>
+      </div>
+    `).join('');
+}
+
+document.getElementById('formCategory').onsubmit = (e) => {
+  e.preventDefault();
+  let c = document.getElementById('catInput').value.trim();
+  if (!c || store.categories.includes(c)) return;
+  store.categories.push(c);
+  persist();
+  document.getElementById('catInput').value = '';
+};
+
+function delCat(i) {
+  if (store.categories.length <= 1) return alert("Keep at least 1!");
+  store.categories.splice(i, 1);
+  persist();
+  }
+  function filterActivities() {
+  const q = (document.getElementById('actSearchInput').value || '').toLowerCase();
+  const cur = getCur();
+  const filtered = cur.acts.filter(a => a.name.toLowerCase().includes(q) || (a.category && a.category.toLowerCase().includes(q)));
+  document.getElementById('selectAct').innerHTML = !filtered.length ? '<option value="">No match</option>' :
+    filtered.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>`).join('');
+}
+
+function setChartFilter(f, btn) {
+  chartFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCharts();
+}
+
+function renderCharts() {
+  const cur = getCur();
+  const now = Date.now();
+  let limit = Infinity;
+  if (chartFilter === '1D') limit = 86400000;
+  else if (chartFilter === '1W') limit = 7 * 86400000;
+  else if (chartFilter === '1M') limit = 30 * 86400000;
+  else if (chartFilter === '1Y') limit = 365 * 86400000;
+
+  const logs = (cur.logs || []).filter(l => (now - (l.timestamp || now)) <= limit).slice().reverse();
+  let cum = 0;
+  const labels = [];
+  const data = [];
+  const catDist = {};
+
+  logs.forEach(l => {
+    cum += (l.type === 'Earn' ? l.amt : -l.amt);
+    labels.push(l.timeString ? l.timeString.split('•')[1] : 'Log');
+    data.push(cum);
+    const cat = l.category || 'General';
+    catDist[cat] = (catDist[cat] || 0) + l.amt;
+  });
+
+  if (!data.length) { labels.push("Now"); data.push(cur.balance); }
+
+  const ctxT = document.getElementById('trendChart').getContext('2d');
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(ctxT, {
+    type: 'line',
+    data: { 
+      labels, 
+      datasets: [{ 
+        data, 
+        borderColor: '#38bdf8', 
+        borderWidth: 2.5, 
+        fill: true, 
+        backgroundColor: 'rgba(56,189,248,0.14)', 
+        tension: 0.35, 
+        pointRadius: 2, 
+        pointHoverRadius: 5 
+      }] 
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }
+  });
+
+  const ctxS = document.getElementById('streakChart').getContext('2d');
+  if (streakChart) streakChart.destroy();
+  const sKeys = Object.keys(cur.streakHistory || {}).slice(-7);
+  streakChart = new Chart(ctxS, {
+    type: 'bar',
+    data: { 
+      labels: sKeys.length ? sKeys : ['Today'], 
+      datasets: [{ 
+        data: sKeys.length ? sKeys.map(k => cur.streakHistory[k]) : [cur.streak || 0], 
+        backgroundColor: '#f59e0b', 
+        borderRadius: 6 
+      }] 
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { stepSize: 1, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+  });
+
+  const ctxC = document.getElementById('categoryChart').getContext('2d');
+  if (catChart) catChart.destroy();
+  const cK = Object.keys(catDist);
+  catChart = new Chart(ctxC, {
+    type: 'doughnut',
+    data: { 
+      labels: cK.length ? cK : ['None'], 
+      datasets: [{ 
+        data: cK.length ? Object.values(catDist) : [1], 
+        backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'], 
+        borderWidth: 0 
+      }] 
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 }, color: '#94a3b8' } } } }
+  });
+}
+
+function renderReports() {
+  const cur = getCur();
+  const grp = {};
+  (cur.logs || []).forEach(l => {
+    const k = l.dateOnly || "Earlier";
+    if (!grp[k]) grp[k] = { e: 0, s: 0, c: 0 };
+    if (l.type === 'Earn') grp[k].e += l.amt; else grp[k].s += l.amt;
+    grp[k].c++;
+  });
+  document.getElementById('reportList').innerHTML = !Object.keys(grp).length ? '<p style="color:var(--sub);font-size:0.75rem;">No logs.</p>' :
+    Object.keys(grp).map(d => `
+      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+        <div style="display:flex; justify-content:space-between; width:100%;"><strong>📅 ${d}</strong><small style="color:var(--sub);">${grp[d].c} actions</small></div>
+        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.78rem;">
+          <span class="earn">+₹${grp[d].e.toFixed(1)}</span>
+          <span class="spend">-₹${grp[d].s.toFixed(1)}</span>
+          <b>Net: ₹${(grp[d].e - grp[d].s).toFixed(1)}</b>
+        </div>
+      </div>
+    `).join('');
+}
+
+function renderManageList() {
+  const cur = getCur();
+  document.getElementById('manageLogsList').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No records.</p>' :
+    cur.logs.map((h, i) => `
+      <div class="item">
+        <div><strong>${h.name}</strong> <small style="color:var(--sub);">(${h.timeString})</small></div>
+        <div>
+          <span class="${h.type==='Earn'?'earn':'spend'}">${h.type==='Earn'?'+':'-'}₹${h.amt.toFixed(1)}</span>
+          <button class="del" onclick="delLog(${i})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+function delLog(i) {
+  if (!confirm("Are you sure? This recalculates Balance, Streak & Charts.")) return;
+  const cur = getCur();
+  const it = cur.logs[i];
+  if (it.type === 'Earn') cur.balance -= it.amt; else cur.balance += it.amt;
+  const dOnly = it.dateOnly;
+  const dIso = it.isoDate;
+  cur.logs.splice(i, 1);
+  if (it.type === 'Earn') recalcStreakOnDelete(dOnly, dIso);
+  persist();
+  renderManageList();
+}
+
+function updateUI() {
+  const cur = getCur();
+  document.getElementById('saveSelector').innerHTML = Object.keys(store.profiles).map(k => `<option value="${k}" ${k===store.active?'selected':''}>📂 ${k}</option>`).join('');
+  document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
+  document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
+
+  const r = getLeaderboard();
+  const rb = document.getElementById('rankBadge');
+  if (r) { rb.style.display = "inline-block"; rb.innerText = r.t; rb.className = `rank-badge ${r.c}`; }
+  else rb.style.display = "none";
+
+  document.getElementById('dailyTargetDisplay').innerText = `₹${cur.dailyTarget || 100}`;
+  document.getElementById('todayEarnedDisplay').innerText = `₹${getTodayEarned().toFixed(0)}`;
+
+  cur.lvls.sort((a,b) => a.lvl - b.lvl);
+  let lvl = cur.lvls[0];
+  for (let l of cur.lvls) { if (cur.balance >= l.target) lvl = l; }
+  document.getElementById('levelBadge').innerText = `Level ${lvl.lvl} : ${lvl.title}`;
+  document.getElementById('progressFill').style.width = `${Math.min(100, Math.max(0, (cur.balance / lvl.target) * 100))}%`;
+
+  filterActivities();
+
+  // Populate Quest Rates
+  document.getElementById('selectQuestRate').innerHTML = cur.acts.map(a => `
+    <option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>
+  `).join('');
+
+  document.getElementById('rateCategorySelect').innerHTML = store.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  // Render Pending Quests
+  const pqList = document.getElementById('listPendingQuests');
+  if (cur.pendingQuests && cur.pendingQuests.length > 0) {
+    pqList.innerHTML = cur.pendingQuests.map(q => `
+      <div class="item">
+        <div>
+          <strong>${q.name}</strong> <span class="tag">🕒 ${q.startTime} - ${q.endTime}</span>
+          <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)} | Low: -${q.lowProdPct}%</small>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="action-btn-tick" title="Complete Quest" onclick="reviewQuest(${q.id})">✓</button>
+          <button class="action-btn-cross" title="Fail Quest" onclick="failQuest(${q.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    pqList.innerHTML = '<p style="color:var(--sub);font-size:0.75rem;">No active quests scheduled.</p>';
+  }
+
+  // Render Recent Logs (Protected - No inline delete)
+  document.getElementById('listHistory').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No activity.</p>' :
+    cur.logs.slice(0, 10).map(h => `
+      <div class="item">
+        <div><strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span> <small style="color:var(--sub);">(${h.timeString})</small></div>
+        <span class="${h.type==='Earn'?'earn':'spend'}">${h.type==='Earn'?'+':'-'}₹${h.amt.toFixed(1)}</span>
+      </div>
+    `).join('');
+
+  document.getElementById('listCategories').innerHTML = store.categories.map((c, i) => `
+    <div class="item"><span>🏷️ ${c}</span><button class="del" onclick="delCat(${i})">✕</button></div>
+  `).join('');
+
+  document.getElementById('listRates').innerHTML = cur.acts.map((a, i) => `
+    <div class="item">
+      <div>
+        <strong>${a.name}</strong> <small style="color:var(--sub);">(${a.unit})</small>
+        <br><small style="color:var(--sub); font-size:0.7rem;">Low Prod Deduction: ${a.lowProdPct !== undefined ? a.lowProdPct : 50}%</small>
+      </div>
+      <div><span class="${a.type==='Earn'?'earn':'spend'}">₹${a.rate}</span> <button class="del" onclick="delRate(${i})">✕</button></div>
+    </div>
+  `).join('');
+
+  document.getElementById('listLevels').innerHTML = cur.lvls.map((l, i) => `
+    <div class="item">
+      <div><strong>Lvl ${l.lvl}: ${l.title}</strong></div>
+      <div>Target: ₹${l.target} <button class="del" onclick="if(cur.lvls.length>1){cur.lvls.splice(${i},1);persist();}">✕</button></div>
+    </div>
+  `).join('');
+
+  renderReports();
+  renderNotes();
+}
+
+document.getElementById('formLog').onsubmit = (e) => {
+  e.preventDefault();
+  const cur = getCur();
+  const id = parseInt(document.getElementById('selectAct').value);
+  if (!id) return alert("Select an activity!");
+  const qty = parseFloat(document.getElementById('inputDuration').value);
+  const act = cur.acts.find(a => a.id === id);
+  const total = act.rate * qty;
+
+  if (act.type === 'Earn') cur.balance += total; else cur.balance -= total;
+  const ist = getIST();
+  cur.logs.unshift({
+    name: act.name, category: act.category || "General", type: act.type,
+    amt: total, qty, unit: act.unit, timestamp: Date.now(),
+    dateOnly: ist.dateOnly, timeString: ist.timeString, isoDate: ist.isoDate
+  });
+  if (act.type === 'Earn') checkStreak();
+  persist();
+  document.getElementById('inputDuration').value = '';
+};
+
+document.getElementById('formRate').onsubmit = (e) => {
+  e.preventDefault();
+  const cur = getCur();
+  const lowPct = parseFloat(document.getElementById('rateLowPct').value);
+  cur.acts.push({
+    id: Date.now(),
+    name: document.getElementById('rateName').value,
+    category: document.getElementById('rateCategorySelect').value,
+    type: document.getElementById('rateType').value,
+    rate: parseFloat(document.getElementById('rateVal').value),
+    unit: document.getElementById('rateUnit').value,
+    lowProdPct: !isNaN(lowPct) ? lowPct : 50
+  });
+  persist();
+  document.getElementById('formRate').reset();
+};
+
+document.getElementById('formLevel').onsubmit = (e) => {
+  e.preventDefault();
+  const cur = getCur();
+  cur.lvls.push({
+    lvl: parseInt(document.getElementById('lvlNum').value),
+    target: parseFloat(document.getElementById('lvlTgt').value),
+    title: document.getElementById('lvlTitle').value
+  });
+  persist();
+  document.getElementById('formLevel').reset();
+};
+
+function delRate(i) {
+  let cur = getCur();
+  if (cur.acts.length <= 1) return alert("Must keep at least 1 rate!");
+  cur.acts.splice(i, 1);
+  persist();
+}
+  
+applyTheme();
+updateUI();
+</script>
+</body>
+</html>
