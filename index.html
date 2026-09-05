@@ -228,11 +228,15 @@
   <div class="chart-box" style="height:150px;"><canvas id="categoryChart"></canvas></div>
 </div>
 
-<!-- Tab 3: Report -->
-<div id="tabReport" class="tab card">
-  <h4 style="margin-bottom:10px; font-size:0.9rem;">Daily Performance Summary</h4>
-  <div id="reportList" class="list"></div>
-</div>
+  <!-- Tab 3: Report -->
+  <div id="tabReport" class="tab card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+      <h4 style="font-size:0.9rem;">Daily Activity Breakdown</h4>
+      <input type="date" id="reportDateFilter" onchange="renderReports()" style="width:auto; margin:0; padding:4px 8px; font-size:0.75rem;">
+    </div>
+    <div id="reportList" class="list" style="max-height:380px;"></div>
+  </div>
+  
 
 <!-- Tab 4: Notes -->
 <div id="tabNotes" class="tab card">
@@ -942,25 +946,62 @@ function renderCharts() {
 
 function renderReports() {
   const cur = getCur();
+  const filterDateInput = document.getElementById('reportDateFilter') ? document.getElementById('reportDateFilter').value : "";
+  
   const grp = {};
   (cur.logs || []).forEach(l => {
+    if (filterDateInput && l.isoDate !== filterDateInput) return;
+    
     const k = l.dateOnly || "Earlier";
-    if (!grp[k]) grp[k] = { e: 0, s: 0, c: 0 };
-    if (l.type === 'Earn') grp[k].e += l.amt; else grp[k].s += l.amt;
-    grp[k].c++;
+    if (!grp[k]) grp[k] = { date: k, items: [], totalEarn: 0, totalSpend: 0 };
+    if (l.type === 'Earn') grp[k].totalEarn += l.amt; 
+    else grp[k].totalSpend += l.amt;
+    grp[k].items.push(l);
   });
-  document.getElementById('reportList').innerHTML = !Object.keys(grp).length ? '<p style="color:var(--sub);font-size:0.75rem;">No logs.</p>' :
-    Object.keys(grp).map(d => `
-      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
-        <div style="display:flex; justify-content:space-between; width:100%;"><strong>📅 ${d}</strong><small style="color:var(--sub);">${grp[d].c} actions</small></div>
-        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.78rem;">
-          <span class="earn">+₹${grp[d].e.toFixed(1)}</span>
-          <span class="spend">-₹${grp[d].s.toFixed(1)}</span>
-          <b>Net: ₹${(grp[d].e - grp[d].s).toFixed(1)}</b>
+
+  const dates = Object.keys(grp);
+  if (!dates.length) {
+    document.getElementById('reportList').innerHTML = '<p style="color:var(--sub); font-size:0.8rem; text-align:center; padding:10px;">No records found for this date.</p>';
+    return;
+  }
+
+  document.getElementById('reportList').innerHTML = dates.map(d => {
+    const dayData = grp[d];
+    const taskCards = dayData.items.map(it => `
+      <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; margin-top:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:700; font-size:0.85rem;">${it.name}</span>
+          <span class="${it.type === 'Earn' ? 'earn' : 'spend'}" style="font-weight:800;">
+            ${it.type === 'Earn' ? '+' : '-'}₹${it.amt.toFixed(2)}
+          </span>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:4px;">
+          <span class="tag" style="margin:0;">🏷️ ${it.category || 'General'}</span>
+          <span style="font-size:0.72rem; color:var(--sub); background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:4px;">
+            📦 ${it.qty || 1} ${it.unit || 'Unit'}
+          </span>
+          <span style="font-size:0.72rem; color:var(--sub); margin-left:auto;">
+            🕒 ${it.timeString ? (it.timeString.includes('•') ? it.timeString.split('•')[1].trim() : it.timeString) : ''}
+          </span>
         </div>
       </div>
     `).join('');
+
+    return `
+      <div class="item" style="flex-direction:column; align-items:stretch; gap:6px; margin-bottom:12px; background:var(--input); border:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:6px;">
+          <strong style="color:var(--primary); font-size:0.9rem;">📅 ${dayData.date}</strong>
+          <span style="font-size:0.75rem; color:var(--sub);">Net: <b style="color:${(dayData.totalEarn - dayData.totalSpend) >= 0 ? 'var(--earn)' : 'var(--spend)'};">₹${(dayData.totalEarn - dayData.totalSpend).toFixed(1)}</b></span>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+          ${taskCards}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
+    
+
 
 function renderManageList() {
   const cur = getCur();
