@@ -162,10 +162,10 @@
 </div>
   <!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
-  <!-- Sub-mode: Standard vs Time-bound -->
+  <!-- Sub-mode: Standard vs Scheduled Quest -->
   <div style="display:flex; gap:8px; margin-bottom:12px;">
     <button type="button" id="btnModeStandard" class="filter-btn active" onclick="switchActMode('standard')">Standard Log</button>
-    <button type="button" id="btnModeTimebound" class="filter-btn" onclick="switchActMode('timebound')">Time-Bound Quest</button>
+    <button type="button" id="btnModeTimebound" class="filter-btn" onclick="switchActMode('timebound')">Scheduled Quest</button>
   </div>
 
   <!-- Standard Form (Includes Live Productivity %) -->
@@ -185,19 +185,33 @@
     <button type="submit" class="btn">+ Add Record</button>
   </form>
 
-  <!-- Time-Bound Quest Form -->
+  <!-- Scheduled Quest Form (Time-Bound vs Untimed Task/Event) -->
   <form id="formTimebound" style="display:none;" onsubmit="handleTimeboundSubmit(event)">
+    <div style="display:flex; gap:8px; margin-bottom:4px;">
+      <button type="button" id="btnQuestTypeTime" class="filter-btn active" onclick="setQuestScheduleType('time')">🕒 Time-Bound</button>
+      <button type="button" id="btnQuestTypeUntimed" class="filter-btn" onclick="setQuestScheduleType('untimed')">📋 Task / Event</button>
+    </div>
+
     <select id="selectQuestRate" required onchange="updateQuestEstimatedPayout()"></select>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+
+    <!-- Time Inputs -->
+    <div id="questTimeInputsRow" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
       <div>
         <label style="font-size:0.75rem; color:var(--sub);">Start Time</label>
-        <input type="time" id="questStartTime" required onchange="updateQuestEstimatedPayout()">
+        <input type="time" id="questStartTime" onchange="updateQuestEstimatedPayout()">
       </div>
       <div>
         <label style="font-size:0.75rem; color:var(--sub);">End Time</label>
-        <input type="time" id="questEndTime" required onchange="updateQuestEstimatedPayout()">
+        <input type="time" id="questEndTime" onchange="updateQuestEstimatedPayout()">
       </div>
     </div>
+
+    <!-- Untimed Task Qty Input -->
+    <div id="questUntimedQtyRow" style="display:none;">
+      <label style="font-size:0.75rem; color:var(--sub);">Count / Quantity</label>
+      <input type="number" id="questUntimedQty" value="1" step="any" min="0.1" oninput="updateQuestEstimatedPayout()">
+    </div>
+
     <div style="font-size:0.8rem; color:var(--earn); font-weight:700; margin-bottom:4px;" id="questEstimatedDisplay">Estimated: ₹0.00</div>
     <button type="submit" class="btn">+ Schedule Quest</button>
   </form>
@@ -228,15 +242,14 @@
   <div class="chart-box" style="height:150px;"><canvas id="categoryChart"></canvas></div>
 </div>
 
-  <!-- Tab 3: Report -->
-  <div id="tabReport" class="tab card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
-      <h4 style="font-size:0.9rem;">Daily Activity Breakdown</h4>
-      <input type="date" id="reportDateFilter" onchange="renderReports()" style="width:auto; margin:0; padding:4px 8px; font-size:0.75rem;">
-    </div>
-    <div id="reportList" class="list" style="max-height:380px;"></div>
+<!-- Tab 3: Report -->
+<div id="tabReport" class="tab card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
+    <h4 style="font-size:0.9rem;">Daily Activity Breakdown</h4>
+    <input type="date" id="reportDateFilter" onchange="renderReports()" style="width:auto; margin:0; padding:4px 8px; font-size:0.75rem;">
   </div>
-  
+  <div id="reportList" class="list" style="max-height:380px;"></div>
+</div>
 
 <!-- Tab 4: Notes -->
 <div id="tabNotes" class="tab card">
@@ -340,7 +353,7 @@
     </div>
   </div>
 </div>
-  <script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
   authDomain: "routine-quest-8613f.firebaseapp.com",
@@ -362,6 +375,7 @@ let catChart = null;
 let chartFilter = '1W';
 let activeFolder = "General";
 let activeActMode = "standard";
+let currentQuestScheduleType = 'time';
 
 let store = JSON.parse(localStorage.getItem('rq_db')) || {
   active: "Default",
@@ -451,6 +465,15 @@ function switchActMode(mode) {
   document.getElementById('pendingQuestsBox').style.display = mode === 'timebound' ? 'block' : 'none';
 }
 
+function setQuestScheduleType(type) {
+  currentQuestScheduleType = type;
+  document.getElementById('btnQuestTypeTime').classList.toggle('active', type === 'time');
+  document.getElementById('btnQuestTypeUntimed').classList.toggle('active', type === 'untimed');
+  document.getElementById('questTimeInputsRow').style.display = type === 'time' ? 'grid' : 'none';
+  document.getElementById('questUntimedQtyRow').style.display = type === 'untimed' ? 'block' : 'none';
+  updateQuestEstimatedPayout();
+}
+
 function calculateDurationUnits(startTime, endTime, unit) {
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = endTime.split(':').map(Number);
@@ -470,13 +493,24 @@ function updateQuestEstimatedPayout() {
   const cur = getCur();
   const actId = parseInt(document.getElementById('selectQuestRate').value);
   const act = cur.acts.find(a => a.id === actId);
-  const st = document.getElementById('questStartTime').value;
-  const et = document.getElementById('questEndTime').value;
-  if (!act || !st || !et) {
+  if (!act) {
     document.getElementById('questEstimatedDisplay').innerText = `Estimated: ₹0.00`;
     return;
   }
-  const units = calculateDurationUnits(st, et, act.unit);
+
+  let units = 1;
+  if (currentQuestScheduleType === 'time') {
+    const st = document.getElementById('questStartTime').value;
+    const et = document.getElementById('questEndTime').value;
+    if (!st || !et) {
+      document.getElementById('questEstimatedDisplay').innerText = `Estimated: ₹0.00`;
+      return;
+    }
+    units = calculateDurationUnits(st, et, act.unit);
+  } else {
+    units = parseFloat(document.getElementById('questUntimedQty').value) || 1;
+  }
+
   const total = act.rate * units;
   document.getElementById('questEstimatedDisplay').innerText = `Estimated: ${act.type === 'Earn' ? '+' : '-'}₹${total.toFixed(2)}`;
 }
@@ -486,33 +520,56 @@ function handleTimeboundSubmit(e) {
   const cur = getCur();
   const actId = parseInt(document.getElementById('selectQuestRate').value);
   const act = cur.acts.find(a => a.id === actId);
-  const st = document.getElementById('questStartTime').value;
-  const et = document.getElementById('questEndTime').value;
-  if (!act || !st || !et) return;
+  if (!act) return;
 
-  const units = calculateDurationUnits(st, et, act.unit);
-  const estimatedAmt = act.rate * units;
+  if (currentQuestScheduleType === 'time') {
+    const st = document.getElementById('questStartTime').value;
+    const et = document.getElementById('questEndTime').value;
+    if (!st || !et) return alert("Select both Start and End time!");
+    const units = calculateDurationUnits(st, et, act.unit);
+    const estimatedAmt = act.rate * units;
 
-  cur.pendingQuests.unshift({
-    id: Date.now(),
-    actId: act.id,
-    name: act.name,
-    category: act.category || "General",
-    type: act.type,
-    rate: act.rate,
-    unit: act.unit,
-    startTime: st,
-    endTime: et,
-    totalMinutes: calculateDurationUnits(st, et, '1 Min'),
-    estimatedAmt: estimatedAmt
-  });
+    cur.pendingQuests.unshift({
+      id: Date.now(),
+      scheduleType: 'time',
+      actId: act.id,
+      name: act.name,
+      category: act.category || "General",
+      type: act.type,
+      rate: act.rate,
+      unit: act.unit,
+      startTime: st,
+      endTime: et,
+      totalMinutes: calculateDurationUnits(st, et, '1 Min'),
+      estimatedAmt: estimatedAmt
+    });
+  } else {
+    const qty = parseFloat(document.getElementById('questUntimedQty').value) || 1;
+    const estimatedAmt = act.rate * qty;
+
+    cur.pendingQuests.unshift({
+      id: Date.now(),
+      scheduleType: 'untimed',
+      actId: act.id,
+      name: act.name,
+      category: act.category || "General",
+      type: act.type,
+      rate: act.rate,
+      unit: act.unit,
+      qty: qty,
+      estimatedAmt: estimatedAmt
+    });
+  }
 
   persist();
   updateUI();
   e.target.reset();
+  if (currentQuestScheduleType === 'untimed') {
+    document.getElementById('questUntimedQty').value = '1';
+  }
   updateQuestEstimatedPayout();
 }
-    function failQuest(id) {
+ function failQuest(id) {
   const cur = getCur();
   const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
   if (qIndex === -1) return;
@@ -527,7 +584,7 @@ function handleTimeboundSubmit(e) {
     category: q.category || "General",
     type: "Spend",
     amt: q.estimatedAmt,
-    qty: 1,
+    qty: q.qty || 1,
     unit: q.unit,
     timestamp: Date.now(),
     dateOnly: ist.dateOnly,
@@ -545,23 +602,40 @@ function reviewQuest(id) {
   const q = cur.pendingQuests.find(item => item.id === id);
   if (!q) return;
 
+  const isTimed = q.scheduleType !== 'untimed';
   const modalBody = document.getElementById('questVerifyContent');
-  modalBody.innerHTML = `
-    <p style="font-size:0.85rem; margin-bottom:12px;"><strong>Task:</strong> ${q.name} <span class="tag">${q.startTime} - ${q.endTime}</span></p>
-    
-    <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">1. Duration Completion:</label>
-    <div style="display:flex; gap:8px; margin:6px 0 12px;">
-      <button type="button" id="btnDurFull" class="filter-btn active" onclick="setVerifyDurationType('full', ${q.id})">Full Time (${q.totalMinutes}m)</button>
-      <button type="button" id="btnDurPartial" class="filter-btn" onclick="setVerifyDurationType('partial', ${q.id})">Partial Time</button>
-    </div>
 
-    <div id="partialInputBox" style="display:none; margin-bottom:12px;">
-      <label style="font-size:0.75rem; color:var(--sub);">Actual Minutes Spent:</label>
-      <input type="number" id="verifyActualMinutes" value="${Math.round(q.totalMinutes / 2)}" min="1" max="${q.totalMinutes}" oninput="calcVerifyPreview(${q.id})">
-    </div>
+  let durationSectionHtml = '';
+  if (isTimed) {
+    durationSectionHtml = `
+      <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">1. Duration Completion:</label>
+      <div style="display:flex; gap:8px; margin:6px 0 12px;">
+        <button type="button" id="btnDurFull" class="filter-btn active" onclick="setVerifyDurationType('full', ${q.id})">Full Time (${q.totalMinutes}m)</button>
+        <button type="button" id="btnDurPartial" class="filter-btn" onclick="setVerifyDurationType('partial', ${q.id})">Partial Time</button>
+      </div>
+      <div id="partialInputBox" style="display:none; margin-bottom:12px;">
+        <label style="font-size:0.75rem; color:var(--sub);">Actual Minutes Spent:</label>
+        <input type="number" id="verifyActualMinutes" value="${Math.round(q.totalMinutes / 2)}" min="1" max="${q.totalMinutes}" oninput="calcVerifyPreview(${q.id})">
+      </div>
+    `;
+  } else {
+    durationSectionHtml = `
+      <div style="font-size:0.8rem; color:var(--sub); margin-bottom:10px;">
+        Quantity / Count: <b>${q.qty || 1} ${q.unit || 'Unit'}</b>
+      </div>
+    `;
+  }
+
+  modalBody.innerHTML = `
+    <p style="font-size:0.85rem; margin-bottom:12px;">
+      <strong>Task:</strong> ${q.name} 
+      <span class="tag">${isTimed ? `🕒 ${q.startTime} - ${q.endTime}` : `📋 Task/Event`}</span>
+    </p>
+    
+    ${durationSectionHtml}
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-      <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">2. Productivity Level:</label>
+      <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">${isTimed ? '2.' : '1.'} Productivity Level:</label>
       <span id="verifyProdDisplay" style="font-size:0.85rem; font-weight:800; color:var(--primary);">100%</span>
     </div>
     <input type="range" id="verifyProdSlider" min="10" max="100" value="100" step="5" oninput="updateVerifyProdSlider(this.value, ${q.id})" style="margin-bottom:14px; padding:0; height:6px;">
@@ -578,9 +652,10 @@ function reviewQuest(id) {
 
   window.curVerifyingQuest = {
     id: q.id,
+    isTimed: isTimed,
     durationType: 'full',
     prodPct: 100,
-    actualMinutes: q.totalMinutes
+    actualMinutes: q.totalMinutes || 0
   };
 
   openModal('questVerifyModal');
@@ -605,24 +680,28 @@ function calcVerifyPreview(qId) {
   const q = cur.pendingQuests.find(item => item.id === qId);
   if (!q) return;
 
-  let mins = q.totalMinutes;
-  if (window.curVerifyingQuest.durationType === 'partial') {
-    mins = parseFloat(document.getElementById('verifyActualMinutes').value) || 1;
+  let baseAmt = q.estimatedAmt;
+
+  if (q.scheduleType !== 'untimed') {
+    let mins = q.totalMinutes;
+    if (window.curVerifyingQuest.durationType === 'partial') {
+      mins = parseFloat(document.getElementById('verifyActualMinutes').value) || 1;
+    }
+    window.curVerifyingQuest.actualMinutes = mins;
+
+    let units = mins;
+    if (q.unit === '1 Hr') units = mins / 60;
+    else if (q.unit === '1 Day') units = mins / (24 * 60);
+    else if (q.unit === '1 Week') units = mins / (7 * 24 * 60);
+    else if (q.unit === 'Task' || q.unit === 'Event') units = mins / q.totalMinutes;
+    baseAmt = q.rate * units;
   }
-  window.curVerifyingQuest.actualMinutes = mins;
 
-  let units = mins;
-  if (q.unit === '1 Hr') units = mins / 60;
-  else if (q.unit === '1 Day') units = mins / (24 * 60);
-  else if (q.unit === '1 Week') units = mins / (7 * 24 * 60);
-  else if (q.unit === 'Task' || q.unit === 'Event') units = mins / q.totalMinutes;
-
-  let baseAmt = q.rate * units;
   const prodFactor = (window.curVerifyingQuest.prodPct || 100) / 100;
   const finalAmt = baseAmt * prodFactor;
 
   window.curVerifyingQuest.calculatedFinalAmt = finalAmt;
-  document.getElementById('verifyFinalAmtDisplay').innerText = `+₹${finalAmt.toFixed(2)}`;
+  document.getElementById('verifyFinalAmtDisplay').innerText = `${q.type === 'Earn' ? '+' : '-'}₹${finalAmt.toFixed(2)}`;
 }
 
 function confirmQuestReward(qId) {
@@ -639,14 +718,14 @@ function confirmQuestReward(qId) {
 
   const ist = getIST();
   const prodTag = window.curVerifyingQuest.prodPct < 100 ? ` [${window.curVerifyingQuest.prodPct}% Prod]` : '';
-  const durTag = window.curVerifyingQuest.durationType === 'partial' ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
+  const durTag = (q.scheduleType !== 'untimed' && window.curVerifyingQuest.durationType === 'partial') ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
 
   cur.logs.unshift({
     name: `${q.name}${durTag}${prodTag}`,
     category: q.category || "General",
     type: q.type,
     amt: earnedAmt,
-    qty: 1,
+    qty: q.qty || 1,
     unit: q.unit,
     timestamp: Date.now(),
     dateOnly: ist.dateOnly,
@@ -660,8 +739,8 @@ function confirmQuestReward(qId) {
   closeModal('questVerifyModal');
   persist();
   updateUI();
-    }
-      function getIST() {
+}
+  function getIST() {
   const now = new Date();
   const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
   const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
@@ -850,8 +929,8 @@ function delCat(i) {
   if (store.categories.length <= 1) return alert("Keep at least 1!");
   store.categories.splice(i, 1);
   persist();
-    }
-    function filterActivities() {
+  }
+  function filterActivities() {
   const q = (document.getElementById('actSearchInput').value || '').toLowerCase();
   const cur = getCur();
   const filtered = cur.acts.filter(a => a.name.toLowerCase().includes(q) || (a.category && a.category.toLowerCase().includes(q)));
@@ -1000,8 +1079,6 @@ function renderReports() {
     `;
   }).join('');
 }
-    
-
 
 function renderManageList() {
   const cur = getCur();
@@ -1052,21 +1129,20 @@ function updateUI() {
 
   filterActivities();
 
-  // Populate Quest Rates
   document.getElementById('selectQuestRate').innerHTML = cur.acts.map(a => `
     <option value="${a.id}">[${a.category || 'General'}] ${a.name} (${a.type==='Earn'?'+':'-'}₹${a.rate}/${a.unit})</option>
   `).join('');
 
   document.getElementById('rateCategorySelect').innerHTML = store.categories.map(c => `<option value="${c}">${c}</option>`).join('');
 
-  // Render Pending Quests
   const pqList = document.getElementById('listPendingQuests');
   if (cur.pendingQuests && cur.pendingQuests.length > 0) {
     pqList.innerHTML = cur.pendingQuests.map(q => `
       <div class="item">
         <div>
-          <strong>${q.name}</strong> <span class="tag">🕒 ${q.startTime} - ${q.endTime}</span>
-          <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)}</small>
+          <strong>${q.name}</strong> 
+          <span class="tag">${q.scheduleType === 'untimed' ? '📋 Task/Event' : `🕒 ${q.startTime} - ${q.endTime}`}</span>
+          <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)}${q.qty ? ` | Qty: ${q.qty}` : ''}</small>
         </div>
         <div style="display:flex; gap:6px;">
           <button class="action-btn-tick" title="Complete Quest" onclick="reviewQuest(${q.id})">✓</button>
@@ -1078,7 +1154,6 @@ function updateUI() {
     pqList.innerHTML = '<p style="color:var(--sub);font-size:0.75rem;">No active quests scheduled.</p>';
   }
 
-  // Render Recent Logs (Protected - No inline delete)
   document.getElementById('listHistory').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No activity.</p>' :
     cur.logs.slice(0, 10).map(h => `
       <div class="item">
@@ -1111,7 +1186,6 @@ function updateUI() {
   renderNotes();
 }
 
-// Standard Form Submission with Live Productivity %
 document.getElementById('formLog').onsubmit = (e) => {
   e.preventDefault();
   const cur = getCur();
@@ -1150,7 +1224,6 @@ document.getElementById('formLog').onsubmit = (e) => {
   document.getElementById('stdProdDisplay').innerText = '100%';
 };
 
-// Rates Form Submission (Clean - No Productivity Input)
 document.getElementById('formRate').onsubmit = (e) => {
   e.preventDefault();
   const cur = getCur();
@@ -1190,4 +1263,3 @@ updateUI();
 </script>
 </body>
 </html>
-
