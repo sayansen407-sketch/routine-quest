@@ -306,17 +306,18 @@
       <button class="target-btn" onclick="closeModal('themeModal')">✕</button>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #38bdf8;" onclick="setTheme('default')">Cyber Midnight (Default)</button>
-      <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-pitch-dark')">Pitch Dark (OLED)</button>
-      <button class="btn" style="background:#1e293b; color:#94a3b8;" onclick="setTheme('theme-slate-grey')">Deep Slate Grey</button>
-      <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light-white')">Minimal White</button>
-      <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e2d9cc;" onclick="setTheme('theme-warm-paper')">Warm Paper Cream</button>
-      <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-ice-silver')">Soft Ice Silver</button>
-      <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #f43f5e;" onclick="setTheme('theme-crimson-red')">Crimson Blood Red</button>
-      <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #10b981;" onclick="setTheme('theme-emerald-green')">Emerald Forest Green</button>
-      <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #a855f7;" onclick="setTheme('theme-royal-purple')">Royal Luxury Purple</button>
-      <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #f59e0b;" onclick="setTheme('theme-sunset-gold')">Cyberpunk Sunset Gold</button>
-      <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #14b8a6;" onclick="setTheme('theme-deep-teal')">Ocean Deep Teal</button>
+              <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #1e293b;" onclick="setTheme('default')">Deep Neon (Default)</button>
+        <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-amoled')">Pure AMOLED</button>
+        <button class="btn" style="background:#1e293b; color:#94a3b8; border:1px solid #334155;" onclick="setTheme('theme-slate')">Slate Minimal</button>
+        <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light')">Clean Paper</button>
+        <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e7e5e4;" onclick="setTheme('theme-warm')">Warm Coffee</button>
+        <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-nordic')">Nordic Soft</button>
+        <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #881337;" onclick="setTheme('theme-crimson')">Crimson Dark</button>
+        <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #064e3b;" onclick="setTheme('theme-emerald')">Emerald Forest</button>
+        <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #581c87;" onclick="setTheme('theme-purple')">Midnight Purple</button>
+        <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #78350f;" onclick="setTheme('theme-amber')">Amber Glow</button>
+        <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #134e4a;" onclick="setTheme('theme-cyan')">Cyber Cyan</button>
+      
     </div>
   </div>
 </div>
@@ -1068,18 +1069,22 @@ function updateUI() {
   renderNotes();
 }
 
-// --- Auth Handling ---
+// --- Auth Handling (Mobile Optimized Redirect) ---
 function toggleAuth() {
   if (!auth) return alert("Firebase Auth not configured.");
   if (currentUser) {
     auth.signOut();
   } else {
     const p = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(p).catch(e => alert(e.message));
+    auth.signInWithRedirect(p);
   }
 }
 
 if (auth) {
+  auth.getRedirectResult().catch(e => {
+    if (e && e.message) alert(e.message);
+  });
+
   auth.onAuthStateChanged(u => {
     currentUser = u;
     const ui = document.getElementById("userInfo");
@@ -1088,8 +1093,12 @@ if (auth) {
       ui.innerHTML = `<img src="${u.photoURL || ''}" class="user-avatar"><span>${u.displayName ? u.displayName.split(' ')[0] : 'Hero'}</span>`;
       ab.innerText = "Logout";
       db.collection("users").doc(u.uid).get().then(doc => {
-        if (doc.exists) { store = doc.data(); updateUI(); }
-        else persist();
+        if (doc.exists) { 
+          store = doc.data(); 
+          updateUI(); 
+        } else {
+          persist();
+        }
       });
     } else {
       ui.innerHTML = `<span>🔒 Guest</span>`;
@@ -1097,6 +1106,7 @@ if (auth) {
     }
   });
 }
+  
 
 applyTheme();
 updateUI();
