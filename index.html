@@ -1,1115 +1,450 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RoutineQuest Pro Cloud</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  :root {
-    --bg: radial-gradient(circle at 50% -10%, #1e293b 0%, #030712 85%);
-    --card: rgba(17, 24, 39, 0.78);
-    --input: rgba(10, 15, 26, 0.85);
-    --border: rgba(56, 189, 248, 0.24);
-    --border-glow: rgba(56, 189, 248, 0.45);
-    --primary: #38bdf8;
-    --primary-glow: rgba(56, 189, 248, 0.6);
-    --earn: #10b981;
-    --spend: #f43f5e;
-    --gold: #fbbf24;
-    --silver: #cbd5e1;
-    --bronze: #f59e0b;
-    --text: #f8fafc;
-    --sub: #94a3b8;
-  }
-  body.theme-pitch-dark { --bg: #000; --card: rgba(12,12,12,0.92); --input: #0a0a0a; --border: #262626; --border-glow: rgba(255,255,255,0.18); --primary: #f8fafc; --primary-glow: rgba(255,255,255,0.35); --text: #fff; --sub: #71717a; }
-  body.theme-slate-grey { --bg: radial-gradient(circle at 50% 0%, #334155, #0f172a 85%); --card: rgba(30,41,59,0.8); --input: #0b1120; --border: #475569; --border-glow: rgba(148,163,184,0.35); --primary: #94a3b8; --primary-glow: rgba(148,163,184,0.45); --text: #f1f5f9; --sub: #94a3b8; }
-  body.theme-light-white { --bg: radial-gradient(circle at 50% 0%, #f1f5f9, #e2e8f0 85%); --card: rgba(255,255,255,0.92); --input: #f8fafc; --border: #cbd5e1; --border-glow: rgba(2,132,199,0.3); --primary: #0284c7; --primary-glow: rgba(2,132,199,0.4); --text: #0f172a; --sub: #64748b; }
-  body.theme-warm-paper { --bg: radial-gradient(circle at 50% 0%, #fefae0, #faedcd 85%); --card: rgba(255,255,255,0.92); --input: #fdfaf6; --border: #d4a373; --border-glow: rgba(180,83,9,0.3); --primary: #b45309; --primary-glow: rgba(180,83,9,0.4); --text: #292524; --sub: #78716c; }
-  body.theme-ice-silver { --bg: radial-gradient(circle at 50% 0%, #f8fafc, #e2e8f0 85%); --card: rgba(255,255,255,0.9); --input: #f1f5f9; --border: #94a3b8; --border-glow: rgba(71,85,105,0.3); --primary: #475569; --primary-glow: rgba(71,85,105,0.4); --text: #1e293b; --sub: #64748b; }
-  body.theme-crimson-red { --bg: radial-gradient(circle at 50% -10%, #58061d 0%, #080103 85%); --card: rgba(26,4,10,0.85); --input: #0d0104; --border: rgba(244,63,94,0.35); --border-glow: rgba(244,63,94,0.55); --primary: #f43f5e; --primary-glow: rgba(244,63,94,0.65); --text: #fff1f2; --sub: #fda4af; }
-  body.theme-emerald-green { --bg: radial-gradient(circle at 50% -10%, #064e3b 0%, #01140e 85%); --card: rgba(4,28,22,0.85); --input: #02140e; --border: rgba(16,185,129,0.35); --border-glow: rgba(16,185,129,0.55); --primary: #10b981; --primary-glow: rgba(16,185,129,0.65); --text: #ecfdf5; --sub: #6ee7b7; }
-  body.theme-royal-purple { --bg: radial-gradient(circle at 50% -10%, #4a044e 0%, #090111 85%); --card: rgba(24,7,40,0.85); --input: #0f051d; --border: rgba(168,85,247,0.35); --border-glow: rgba(168,85,247,0.55); --primary: #a855f7; --primary-glow: rgba(168,85,247,0.65); --text: #faf5ff; --sub: #d8b4fe; }
-  body.theme-sunset-gold { --bg: radial-gradient(circle at 50% -10%, #78350f 0%, #0c0401 85%); --card: rgba(28,10,2,0.85); --input: #0c0401; --border: rgba(245,158,11,0.4); --border-glow: rgba(245,158,11,0.6); --primary: #f59e0b; --primary-glow: rgba(245,158,11,0.65); --text: #fffbeb; --sub: #fcd34d; }
-  body.theme-deep-teal { --bg: radial-gradient(circle at 50% -10%, #134e4a 0%, #011717 85%); --card: rgba(5,29,29,0.85); --input: #02140e; --border: rgba(20,184,166,0.4); --border-glow: rgba(20,184,166,0.6); --primary: #14b8a6; --primary-glow: rgba(20,184,166,0.65); --text: #f0fdfa; --sub: #5eead4; }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 16px 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; transition: all 0.35s ease; letter-spacing: -0.2px; }
-
-  .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; position: relative; }
-  .menu-btn { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); color: var(--primary); font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: transform 0.15s; }
-  .menu-btn:active { transform: scale(0.92); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Routine Quest</title>
   
-  .menu-dropdown { display: none; position: absolute; left: 0; top: 48px; background: var(--card); backdrop-filter: blur(24px); border: 1px solid var(--border-glow); border-radius: 14px; box-shadow: 0 16px 36px rgba(0,0,0,0.88); z-index: 60; min-width: 220px; flex-direction: column; overflow: hidden; }
-  .menu-dropdown.show { display: flex; }
-  .menu-dropdown button { background: transparent; border: none; color: var(--text); padding: 12px 16px; text-align: left; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  <!-- Firebase SDKs (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  .auth-box { flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--card); backdrop-filter: blur(20px); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); }
-  .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
-  .user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-  .auth-btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; font-size: 0.75rem; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #131b2e;
+      --primary: #38bdf8;
+      --text: #f8fafc;
+      --sub: #94a3b8;
+      --border: #1e293b;
+      --earn: #10b981;
+      --spend: #f43f5e;
+    }
 
-  .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); backdrop-filter: blur(20px); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 14px; }
-  .bar select { background: transparent; border: none; color: var(--primary); font-size: 0.95rem; font-weight: 800; outline: none; }
-  .plus-btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; width: 32px; height: 32px; border-radius: 50%; font-weight: 900; border: none; cursor: pointer; }
+    body.theme-amoled { --bg: #000000; --card: #0a0a0a; --border: #222222; }
+    body.theme-slate { --bg: #0f172a; --card: #1e293b; --border: #334155; }
+    body.theme-light { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --sub: #64748b; --border: #e2e8f0; }
+    body.theme-warm { --bg: #faf7f2; --card: #ffffff; --text: #292524; --sub: #78716c; --border: #e7e5e4; }
+    body.theme-nordic { --bg: #eef2f6; --card: #ffffff; --text: #1e293b; --sub: #64748b; --border: #cbd5e1; }
+    body.theme-crimson { --bg: #0d0204; --card: #170408; --border: #4c0519; --primary: #f43f5e; }
+    body.theme-emerald { --bg: #020d09; --card: #041c16; --border: #064e3b; --primary: #10b981; }
+    body.theme-purple { --bg: #0a0514; --card: #170b2c; --border: #3b0764; --primary: #a855f7; }
+    body.theme-amber { --bg: #0f0701; --card: #1c0a02; --border: #451a03; --primary: #f59e0b; }
+    body.theme-cyan { --bg: #020f0f; --card: #051d1d; --border: #042f2e; --primary: #14b8a6; }
 
-  .card { background: var(--card); backdrop-filter: blur(22px); padding: 18px; border-radius: 18px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(0,0,0,0.45); position: relative; }
-  .wallet { text-align: center; border-color: var(--border-glow); box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 0 24px rgba(56,189,248,0.08); }
-  .badge-row { display: flex; justify-content: center; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-  .badge { font-size: 0.78rem; color: #000; background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 4px 12px; border-radius: 20px; font-weight: 900; }
-  .streak-badge { font-size: 0.78rem; background: rgba(245,158,11,0.18); border: 1px solid #f59e0b; color: #f59e0b; padding: 4px 11px; border-radius: 20px; font-weight: 800; }
-  .rank-badge { font-size: 0.75rem; padding: 3px 9px; border-radius: 12px; font-weight: 900; }
-  .rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; }
-  .rank-2 { background: linear-gradient(135deg, #94a3b8, #e2e8f0); color: #000; }
-  .rank-3 { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
 
-  .balance { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; text-shadow: 0 0 24px var(--primary-glow); margin: 4px 0 8px; }
-  .prog-bg { width: 100%; height: 9px; background: rgba(15,23,42,0.85); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); }
-  .prog-fill { height: 100%; background: linear-gradient(90deg, #0284c7, var(--primary)); width: 0%; transition: width 0.4s ease; }
-  .prog-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub); margin-top: 6px; font-weight: 700; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+    .header-left, .header-right { display: flex; align-items: center; gap: 8px; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-  .target-box { background: rgba(15,23,42,0.55); backdrop-filter: blur(12px); padding: 9px 12px; border-radius: 11px; border: 1px dashed var(--border); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
-  .target-btn { background: rgba(56,189,248,0.18); border: 1px solid var(--primary); color: var(--primary); padding: 4px 9px; border-radius: 7px; font-size: 0.75rem; cursor: pointer; font-weight: 800; }
+    .nav-tabs { display: flex; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--border); padding: 6px 12px; gap: 8px; }
+    .tab-btn { background: none; border: none; color: var(--sub); padding: 6px 12px; font-weight: 600; border-radius: 6px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; }
+    .tab-btn.active { color: var(--primary); background: rgba(56, 189, 248, 0.1); }
 
-  .nav { display: flex; gap: 5px; background: var(--card); backdrop-filter: blur(20px); padding: 6px; border-radius: 14px; margin-bottom: 14px; overflow-x: auto; border: 1px solid var(--border); }
-  .nav button { flex: 1; padding: 9px 6px; background: transparent; color: var(--sub); border: none; border-radius: 9px; font-weight: 800; cursor: pointer; font-size: 0.78rem; white-space: nowrap; }
-  .nav button.active { background: var(--primary); color: #070d19; box-shadow: 0 2px 12px var(--primary-glow); }
-
-  .tab { display: none; }
-  .tab.active { display: block; }
-
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 100; justify-content: center; align-items: center; padding: 16px; }
-  .modal.show { display: flex; }
-  .modal-body { background: var(--card); border: 1px solid var(--border-glow); border-radius: 18px; width: 100%; max-width: 440px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 48px rgba(0,0,0,0.92); }
-
-  form { display: flex; flex-direction: column; gap: 10px; }
-  input, select, textarea { width: 100%; padding: 12px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.1); background: var(--input); color: var(--text); font-size: 0.9rem; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
-  .btn { padding: 12px; background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; border: none; border-radius: 11px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px 16px var(--primary-glow); }
-
-  .filter-bar { display: flex; gap: 5px; margin-bottom: 12px; background: var(--input); padding: 4px; border-radius: 9px; }
-  .filter-btn { flex: 1; background: transparent; border: none; color: var(--sub); padding: 6px 0; font-size: 0.75rem; font-weight: 800; cursor: pointer; border-radius: 7px; }
-  .filter-btn.active { background: var(--primary); color: #070d19; }
-
-  .chart-box { position: relative; width: 100%; height: 195px; margin-bottom: 14px; }
-  .list { max-height: 280px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .item { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--input); border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.06); }
-  .earn { color: var(--earn); font-weight: 900; }
-  .spend { color: var(--spend); font-weight: 900; }
-  .tag { font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; background: rgba(56,189,248,0.18); color: var(--primary); margin-left: 6px; font-weight: 800; }
-  .del { background: rgba(244,63,94,0.18); color: var(--spend); border: 1px solid rgba(244,63,94,0.4); padding: 5px 9px; border-radius: 7px; cursor: pointer; font-size: 0.75rem; font-weight: 800; }
-  
-  .action-btn-tick { background: rgba(16,185,129,0.2); color: var(--earn); border: 1px solid var(--earn); width: 32px; height: 32px; border-radius: 8px; font-weight: 900; font-size: 1rem; cursor: pointer; }
-  .action-btn-cross { background: rgba(244,63,94,0.2); color: var(--spend); border: 1px solid var(--spend); width: 32px; height: 32px; border-radius: 8px; font-weight: 900; font-size: 0.9rem; cursor: pointer; }
-  .sub-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-  .sub-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--sub); cursor: pointer; }
-  .folder-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
-  .folder-btn { background: var(--input); border: 1px solid var(--border); color: var(--sub); padding: 6px 13px; border-radius: 9px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-weight: 800; }
-  .folder-btn.active { background: var(--primary); color: #070d19; }
-</style>
+    .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    
+    .btn { background: var(--primary); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; text-align: center; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--spend); color: #fff; }
+    
+    input, select, textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; }
+    
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+    .modal.active { display: flex; }
+    .modal-body { background: var(--card); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 400px; padding: 16px; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    
+    .item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--border); }
+    .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+    .del { background: none; border: none; color: var(--spend); cursor: pointer; font-weight: bold; }
+  </style>
 </head>
 <body>
 
-<div class="top-header">
-  <button class="menu-btn" onclick="toggleMenu()" title="Options">⋮</button>
-  <div class="menu-dropdown" id="menuDropdown">
-    <button onclick="openModal('manageModal')">📋 Manage & Delete Logs</button>
-    <button onclick="openModal('themeModal')">🎨 Appearance & Themes</button>
-  </div>
-  <div class="auth-box">
-    <div class="user-info" id="userInfo"><span>🔒 Guest</span></div>
-    <button class="auth-btn" id="authBtn" onclick="toggleAuth()">Login</button>
-  </div>
-</div>
-
-<div class="bar">
-  <select id="saveSelector" onchange="switchProfile(this.value)"></select>
-  <button class="plus-btn" onclick="addProfile()">+</button>
-</div>
-
-<div class="card wallet">
-  <div class="badge-row">
-    <span class="badge" id="levelBadge">Level 1 : Novice</span>
-    <span class="streak-badge" id="streakBadge">🔥 0 Days</span>
-    <span class="rank-badge" id="rankBadge" style="display:none;"></span>
-  </div>
-  <div style="font-size:0.75rem; color:var(--sub); text-transform:uppercase; letter-spacing:1px; font-weight:800;">Net Balance</div>
-  <div class="balance" id="walletBalance">₹ 0.00</div>
-  <div class="prog-bg"><div class="prog-fill" id="progressFill"></div></div>
-  <div class="prog-meta"><span>XP Progression</span><span id="progressText">0 / 500</span></div>
-  <div class="target-box">
-    <span>Daily Target: <b id="dailyTargetDisplay" style="color:var(--earn);">₹100</b> | Today: <b id="todayEarnedDisplay">₹0</b></span>
-    <button class="target-btn" onclick="changeDailyTarget()">Edit Target</button>
-  </div>
-</div>
-
-<div class="nav">
-  <button class="active" onclick="switchTab('tabLog', this)">Activity</button>
-  <button onclick="switchTab('tabCharts', this)">Charts</button>
-  <button onclick="switchTab('tabReport', this)">Report</button>
-  <button onclick="switchTab('tabNotes', this)">Notes</button>
-  <button onclick="switchTab('tabCategories', this)">Category</button>
-  <button onclick="switchTab('tabRates', this)">Rates</button>
-  <button onclick="switchTab('tabLevels', this)">Levels</button>
-</div>
-
-<!-- Tab 1: Activity -->
-<div id="tabLog" class="tab active">
-  <!-- Section A: Time-Bound Quests Planner -->
-  <div class="card">
-    <div class="sub-title"><span>⏳ Scheduled Quests (Time-Bound)</span></div>
-    <form id="formQuest" style="margin-bottom:12px;">
-      <select id="selectQuestAct" required></select>
-      <div style="display:flex; gap:8px;">
-        <div style="flex:1;"><small style="font-size:0.7rem; color:var(--sub);">Start Time</small><input type="time" id="questStart" required></div>
-        <div style="flex:1;"><small style="font-size:0.7rem; color:var(--sub);">End Time</small><input type="time" id="questEnd" required></div>
+  <header>
+    <div class="header-left">
+      <div id="userInfo" style="display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+        <span>🔒 Guest</span>
       </div>
-      <button type="submit" class="btn" style="background:linear-gradient(135deg, #38bdf8, #0284c7);">+ Schedule Quest</button>
-    </form>
-    <h4 style="font-size:0.8rem; color:var(--sub); margin-bottom:6px;">Pending Quests Queue</h4>
-    <div class="list" id="listPendingQuests" style="max-height:200px;"></div>
+      <button class="btn btn-outline" id="authBtn" onclick="toggleAuth()" style="padding:4px 8px; font-size:0.75rem;">Login</button>
+    </div>
+    <div class="header-right">
+      <select id="saveSelector" onchange="switchProfile(this.value)" style="width:auto; margin:0; padding:4px 8px; font-size:0.75rem;"></select>
+      <button class="btn btn-outline" onclick="openModal('manageModal')" style="padding:4px 8px; font-size:0.75rem;">⚙️</button>
+      <button class="btn btn-outline" onclick="openModal('themeModal')" style="padding:4px 8px; font-size:0.75rem;">🎨</button>
+    </div>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabQuests')">Quests</button>
+    <button class="tab-btn" onclick="switchTab('tabLogs')">History</button>
+    <button class="tab-btn" onclick="switchTab('tabAnalytics')">Analytics</button>
+    <button class="tab-btn" onclick="switchTab('tabNotes')">Notes</button>
+    <button class="tab-btn" onclick="switchTab('tabRates')">Rates</button>
+    <button class="tab-btn" onclick="switchTab('tabLevels')">Levels</button>
   </div>
 
-  <!-- Section B: Instant Direct Log -->
-  <div class="card">
-    <div class="sub-title"><span>⚡ Instant Activity Log</span></div>
-    <form id="formLog">
-      <input type="text" id="actSearchInput" placeholder="🔍 Search activity..." oninput="filterActivities()">
-      <select id="selectAct" required></select>
-      <input type="number" id="inputDuration" placeholder="Count / Duration (e.g. 1, 30)" step="any" required>
-      <label class="checkbox-row">
-        <input type="checkbox" id="directLowProdCheck" style="width:16px; height:16px;">
-        <span>Low Productivity (Reduced Payout as per Rate)</span>
-      </label>
-      <button type="submit" class="btn">+ Add Instant Record</button>
-    </form>
-    <h4 style="margin-top:14px; font-size:0.85rem; color:var(--sub);">Recent Activity Logs (Protected)</h4>
-    <div class="list" id="listHistory"></div>
-  </div>
-</div>
-
-<!-- Tab 2: Charts -->
-<div id="tabCharts" class="tab card">
-  <div class="filter-bar">
-    <button class="filter-btn" onclick="setChartFilter('1D', this)">1D</button>
-    <button class="filter-btn active" onclick="setChartFilter('1W', this)">1W</button>
-    <button class="filter-btn" onclick="setChartFilter('1M', this)">1M</button>
-    <button class="filter-btn" onclick="setChartFilter('1Y', this)">1Y</button>
-    <button class="filter-btn" onclick="setChartFilter('ALL', this)">ALL</button>
-  </div>
-  <div class="chart-box"><canvas id="trendChart"></canvas></div>
-  <h4 style="font-size:0.85rem; margin:10px 0 6px; color:var(--gold);">🔥 Streak & Consistency Trend</h4>
-  <div class="chart-box" style="height:150px;"><canvas id="streakChart"></canvas></div>
-  <h4 style="font-size:0.85rem; margin:10px 0 6px; color:var(--primary);">Category Breakdown</h4>
-  <div class="chart-box" style="height:150px;"><canvas id="categoryChart"></canvas></div>
-</div>
-
-<!-- Tab 3: Report -->
-<div id="tabReport" class="tab card">
-  <h4 style="margin-bottom:10px; font-size:0.9rem;">Daily Performance Summary</h4>
-  <div id="reportList" class="list"></div>
-</div>
-
-<!-- Tab 4: Notes -->
-<div id="tabNotes" class="tab card">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-    <h4 style="font-size:0.9rem;">Folders & Notes</h4>
-    <button class="target-btn" onclick="createFolder()">+ New Folder</button>
-  </div>
-  <div class="folder-nav" id="folderList"></div>
-  <form id="formNote" style="margin-bottom:12px;">
-    <input type="text" id="noteTitle" placeholder="Note Title" required>
-    <textarea id="noteContent" rows="3" placeholder="Write unlimited notes here..." required></textarea>
-    <button type="submit" class="btn">+ Save Note</button>
-  </form>
-  <div id="notesContainer" class="list"></div>
-</div>
-
-<!-- Tab 5: Categories -->
-<div id="tabCategories" class="tab card">
-  <form id="formCategory">
-    <input type="text" id="catInput" placeholder="Category Name" required>
-    <button type="submit" class="btn">+ Add Category</button>
-  </form>
-  <div class="list" id="listCategories"></div>
-</div>
-
-<!-- Tab 6: Rates -->
-<div id="tabRates" class="tab card">
-  <form id="formRate">
-    <input type="text" id="rateName" placeholder="Activity Name" required>
-    <select id="rateCategorySelect"></select>
-    <div style="display:flex; gap:8px;">
-      <select id="rateType"><option value="Earn">Earn (+)</option><option value="Spend">Spend (-)</option></select>
-      <input type="number" id="rateVal" placeholder="₹ Rate" step="any" required>
+  <div class="container">
+    <!-- Top Stats -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="card" style="margin:0; text-align:center;">
+        <small style="color:var(--sub); font-size:0.75rem;">Balance</small>
+        <h3 id="walletBalance" style="color:var(--primary); margin-top:4px;">₹ 0.00</h3>
+      </div>
+      <div class="card" style="margin:0; text-align:center;">
+        <small style="color:var(--sub); font-size:0.75rem;">Current Streak</small>
+        <h3 id="streakBadge" style="margin-top:4px;">🔥 0 Days</h3>
+      </div>
     </div>
-    <select id="rateUnit">
-      <option value="Task">Per 1 Task</option>
-      <option value="1 Min">Per 1 Minute</option>
-      <option value="1 Hr">Per 1 Hour</option>
-      <option value="1 Day">Per 1 Day</option>
-      <option value="1 Week">Per 1 Week</option>
-      <option value="Event">Per 1 Event</option>
-    </select>
-    <div style="background:rgba(0,0,0,0.25); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
-      <small style="font-size:0.75rem; color:var(--sub);">Low Productivity Payout (%)</small>
-      <input type="number" id="rateLowPct" placeholder="e.g. 50 for 50%, 40 for 40%" min="1" max="100" value="50" required>
-    </div>
-    <button type="submit" class="btn">Save Rate</button>
-  </form>
-  <div class="list" id="listRates"></div>
-</div>
 
-<!-- Tab 7: Levels -->
-<div id="tabLevels" class="tab card">
-  <form id="formLevel">
-    <div style="display:flex; gap:8px;">
-      <input type="number" id="lvlNum" placeholder="Lvl #" required style="flex:1;">
-      <input type="number" id="lvlTgt" placeholder="Target ₹" required style="flex:2;">
-    </div>
-    <input type="text" id="lvlTitle" placeholder="Badge Title" required>
-    <button type="submit" class="btn">Save Level</button>
-  </form>
-  <div class="list" id="listLevels"></div>
-</div>
+    <!-- Tab 1: Quests -->
+    <div id="tabQuests" class="tab-content">
+      <div class="card">
+        <h4 style="margin-bottom:10px;">Quick Quest</h4>
+        <form id="formQuest" onsubmit="handleQuestSubmit(event)">
+          <select id="selectQuestAct" required></select>
+          <input type="number" id="questQty" placeholder="Units / Duration" required min="1" step="any">
+          <button type="submit" class="btn" style="width:100%;">Complete Quest</button>
+        </form>
+      </div>
 
-<!-- Modals -->
-<div class="modal" id="questVerifyModal">
-  <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h4 style="color:var(--earn);">✓ Quest Completion Review</h4>
-      <button class="target-btn" onclick="closeModal('questVerifyModal')">✕</button>
+      <div class="card">
+        <h4>Active Quests</h4>
+        <div id="listPendingQuests" style="margin-top:10px;"></div>
+      </div>
     </div>
-    <div id="questVerifyContent"></div>
-  </div>
-</div>
 
-<div class="modal" id="manageModal">
-  <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h4>Manage & Delete Logs</h4>
-      <button class="target-btn" onclick="closeModal('manageModal')">✕</button>
+    <!-- Tab 2: Logs -->
+    <div id="tabLogs" class="tab-content" style="display:none;">
+      <div class="card">
+        <h4>Recent History</h4>
+        <div id="listHistory" style="margin-top:10px;"></div>
+      </div>
     </div>
-    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:10px;">Deleting safely updates Net Balance, Streak progress, and Charts.</p>
-    <div class="list" id="manageLogsList"></div>
-  </div>
-</div>
 
-<div class="modal" id="themeModal">
-  <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h4>Appearance & Themes</h4>
-      <button class="target-btn" onclick="closeModal('themeModal')">✕</button>
+    <!-- Tab 3: Analytics -->
+    <div id="tabAnalytics" class="tab-content" style="display:none;">
+      <div class="card">
+        <h4>Performance Trend</h4>
+        <canvas id="trendChart" style="max-height:200px; margin-top:10px;"></canvas>
+      </div>
     </div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-              <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #1e293b;" onclick="setTheme('default')">Deep Neon (Default)</button>
-        <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-amoled')">Pure AMOLED</button>
-        <button class="btn" style="background:#1e293b; color:#94a3b8; border:1px solid #334155;" onclick="setTheme('theme-slate')">Slate Minimal</button>
-        <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light')">Clean Paper</button>
-        <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e7e5e4;" onclick="setTheme('theme-warm')">Warm Coffee</button>
-        <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-nordic')">Nordic Soft</button>
-        <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #881337;" onclick="setTheme('theme-crimson')">Crimson Dark</button>
-        <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #064e3b;" onclick="setTheme('theme-emerald')">Emerald Forest</button>
-        <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #581c87;" onclick="setTheme('theme-purple')">Midnight Purple</button>
-        <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #78350f;" onclick="setTheme('theme-amber')">Amber Glow</button>
-        <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #134e4a;" onclick="setTheme('theme-cyan')">Cyber Cyan</button>
-      
+
+    <!-- Tab 4: Notes -->
+    <div id="tabNotes" class="tab-content" style="display:none;">
+      <div class="card">
+        <form id="formNote" onsubmit="handleNoteSubmit(event)">
+          <input type="text" id="noteTitle" placeholder="Note Title" required>
+          <textarea id="noteContent" placeholder="Take a note..." rows="3" required></textarea>
+          <button type="submit" class="btn" style="width:100%;">Save Note</button>
+        </form>
+      </div>
+      <div id="notesContainer"></div>
+    </div>
+
+    <!-- Tab 5: Rates -->
+    <div id="tabRates" class="tab-content" style="display:none;">
+      <div class="card">
+        <h4>Manage Activity Rates</h4>
+        <div id="listRates" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Tab 6: Levels -->
+    <div id="tabLevels" class="tab-content" style="display:none;">
+      <div class="card">
+        <h4>Rank Progression</h4>
+        <div id="listLevels" style="margin-top:10px;"></div>
+      </div>
     </div>
   </div>
-</div>
-<script>
-// --- Firebase Config & Setup ---
-const firebaseConfig = {
+
+  <!-- Appearance & Themes Modal -->
+  <div class="modal" id="themeModal">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h4>Appearance & Themes</h4>
+        <button class="btn btn-outline" onclick="closeModal('themeModal')" style="padding:2px 8px;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn" style="background:#070d19; color:#38bdf8; border:1px solid #1e293b;" onclick="setTheme('default'); closeModal('themeModal');">Deep Neon (Default)</button>
+        <button class="btn" style="background:#000; color:#fff; border:1px solid #333;" onclick="setTheme('theme-amoled'); closeModal('themeModal');">Pure AMOLED</button>
+        <button class="btn" style="background:#1e293b; color:#94a3b8; border:1px solid #334155;" onclick="setTheme('theme-slate'); closeModal('themeModal');">Slate Minimal</button>
+        <button class="btn" style="background:#fff; color:#0f172a; border:1px solid #cbd5e1;" onclick="setTheme('theme-light'); closeModal('themeModal');">Clean Paper</button>
+        <button class="btn" style="background:#faf7f2; color:#292524; border:1px solid #e7e5e4;" onclick="setTheme('theme-warm'); closeModal('themeModal');">Warm Coffee</button>
+        <button class="btn" style="background:#eef2f6; color:#1e293b; border:1px solid #cbd5e1;" onclick="setTheme('theme-nordic'); closeModal('themeModal');">Nordic Soft</button>
+        <button class="btn" style="background:#170408; color:#f43f5e; border:1px solid #881337;" onclick="setTheme('theme-crimson'); closeModal('themeModal');">Crimson Dark</button>
+        <button class="btn" style="background:#041c16; color:#10b981; border:1px solid #064e3b;" onclick="setTheme('theme-emerald'); closeModal('themeModal');">Emerald Forest</button>
+        <button class="btn" style="background:#170b2c; color:#a855f7; border:1px solid #581c87;" onclick="setTheme('theme-purple'); closeModal('themeModal');">Midnight Purple</button>
+        <button class="btn" style="background:#1c0a02; color:#f59e0b; border:1px solid #78350f;" onclick="setTheme('theme-amber'); closeModal('themeModal');">Amber Glow</button>
+        <button class="btn" style="background:#051d1d; color:#14b8a6; border:1px solid #134e4a;" onclick="setTheme('theme-cyan'); closeModal('themeModal');">Cyber Cyan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Profile Modal -->
+  <div class="modal" id="manageModal">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h4>Manage Profiles</h4>
+        <button class="btn btn-outline" onclick="closeModal('manageModal')" style="padding:2px 8px;">✕</button>
+      </div>
+      <input type="text" id="newProfileName" placeholder="New Profile Name">
+      <button class="btn" onclick="addProfile()" style="width:100%; margin-bottom:12px;">Create Profile</button>
+      <div id="manageProfilesList"></div>
+    </div>
+  </div>
+    <script>
+    // --- Firebase Initialization ---
+    const firebaseConfig = {
       apiKey: "AIzaSyDZ7JwsMsB4KERLbq2Nrzwm17Bq4LxVsQY",
-    authDomain: "routine-quest-8613f.firebaseapp.com",
-    projectId: "routine-quest-8613f",
-    storageBucket: "routine-quest-8613f.firebasestorage.app",
-    messagingSenderId: "461797030515",
-    appId: "1:461797030515:web:071645a001e08f228a4806",
-    measurementId: "G-JW5KHNGRC8"
-  
-};
+      authDomain: "routine-quest-8613f.firebaseapp.com",
+      projectId: "routine-quest-8613f",
+      storageBucket: "routine-quest-8613f.firebasestorage.app",
+      messagingSenderId: "461797030515",
+      appId: "1:461797030515:web:071645a001e08f228a4806",
+      measurementId: "G-JW5KHNGRC8"
+    };
 
-let auth = null, db = null, currentUser = null;
-try {
-  if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
-  auth = firebase.auth();
-  db = firebase.firestore();
-} catch (e) {
-  console.log("Firebase init skipped/offline mode:", e);
-}
-
-// --- App State & Defaults ---
-const defaultState = {
-  profile: "Default",
-  categories: ["Study", "Health", "Work", "Habits", "General"],
-  folders: ["General"],
-  activeFolder: "General",
-  theme: "default",
-  dailyTarget: 100,
-  balance: 0,
-  streak: 0,
-  lastStreakDate: "",
-  streakHistory: {},
-  acts: [
-    { id: 1, name: "Deep Study", category: "Study", type: "Earn", rate: 50, unit: "1 Hr", lowPct: 50 },
-    { id: 2, name: "Workout", category: "Health", type: "Earn", rate: 40, unit: "1 Hr", lowPct: 50 },
-    { id: 3, name: "Distraction", category: "Habits", type: "Spend", rate: 20, unit: "Task", lowPct: 100 }
-  ],
-  lvls: [
-    { lvl: 1, target: 0, title: "Novice" },
-    { lvl: 2, target: 200, title: "Apprentice" },
-    { lvl: 3, target: 500, title: "Adept" },
-    { lvl: 4, target: 1000, title: "Master" }
-  ],
-  logs: [],
-  notes: [],
-  quests: [] // Scheduled Quests Queue
-};
-
-let store = JSON.parse(localStorage.getItem("rq_db")) || {
-  profiles: { "Default": JSON.parse(JSON.stringify(defaultState)) },
-  activeProfile: "Default"
-};
-
-let chartFilter = "1W";
-let trendChart = null, streakChart = null, catChart = null;
-
-// Helpers
-function getCur() {
-  if (!store.profiles[store.activeProfile]) {
-    store.profiles[store.activeProfile] = JSON.parse(JSON.stringify(defaultState));
-  }
-  let c = store.profiles[store.activeProfile];
-  if (!c.quests) c.quests = [];
-  return c;
-}
-
-function persist() {
-  localStorage.setItem("rq_db", JSON.stringify(store));
-  if (db && currentUser) {
-    db.collection("users").doc(currentUser.uid).set(store).catch(err => console.error("Cloud sync err:", err));
-  }
-  updateUI();
-}
-
-function getIST() {
-  const d = new Date();
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  const ist = new Date(utc + (3600000 * 5.5));
-  const dateOnly = ist.toISOString().split("T")[0];
-  const timeString = ist.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' });
-  return { dateOnly, timeString, isoDate: ist.toISOString() };
-}
-  // --- Scheduled Quest Logic & Calculations ---
-function calculateQuestAmount(act, minutes) {
-  if (act.unit === "1 Min") return act.rate * minutes;
-  if (act.unit === "1 Hr") return (act.rate / 60) * minutes;
-  if (act.unit === "1 Day") return (act.rate / 1440) * minutes;
-  if (act.unit === "1 Week") return (act.rate / 10080) * minutes;
-  return act.rate; // Task ba Event-er jonno flat rate
-}
-
-document.getElementById("formQuest").onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  const actId = parseInt(document.getElementById("selectQuestAct").value);
-  const start = document.getElementById("questStart").value;
-  const end = document.getElementById("questEnd").value;
-  const act = cur.acts.find(a => a.id === actId);
-  if (!act) return alert("Select a valid activity!");
-
-  const [sH, sM] = start.split(":").map(Number);
-  const [eH, eM] = end.split(":").map(Number);
-  let totalMin = (eH * 60 + eM) - (sH * 60 + sM);
-  if (totalMin <= 0) totalMin += 1440; // Overnight handling
-
-  const expectedAmt = parseFloat(calculateQuestAmount(act, totalMin).toFixed(2));
-
-  cur.quests.push({
-    id: Date.now(),
-    actId: act.id,
-    name: act.name,
-    category: act.category || "General",
-    type: act.type,
-    rate: act.rate,
-    unit: act.unit,
-    lowPct: act.lowPct || 50,
-    startTime: start,
-    endTime: end,
-    durationMin: totalMin,
-    expectedAmt: expectedAmt
-  });
-
-  persist();
-  document.getElementById("formQuest").reset();
-};
-
-// --- Cross (✕) Action: Full Penalty ---
-function failQuest(id) {
-  if (!confirm("Did you fail this quest? The full amount will be deducted as a penalty!")) return;
-  const cur = getCur();
-  const idx = cur.quests.findIndex(q => q.id === id);
-  if (idx === -1) return;
-  const q = cur.quests[idx];
-  const ist = getIST();
-
-  cur.balance -= q.expectedAmt;
-  cur.logs.unshift({
-    name: `✕ Failed: ${q.name}`,
-    category: q.category,
-    type: "Spend",
-    amt: q.expectedAmt,
-    qty: q.durationMin,
-    unit: q.unit,
-    timestamp: Date.now(),
-    dateOnly: ist.dateOnly,
-    timeString: ist.timeString,
-    isoDate: ist.isoDate
-  });
-
-  cur.quests.splice(idx, 1);
-  persist();
-}
-
-// --- Tick (✓) Action: Verify Modal Flow ---
-let activeReviewQuest = null;
-
-function reviewQuest(id) {
-  const cur = getCur();
-  const q = cur.quests.find(item => item.id === id);
-  if (!q) return;
-  activeReviewQuest = q;
-
-  const modalContent = document.getElementById("questVerifyContent");
-  modalContent.innerHTML = `
-    <div style="font-size:0.9rem; margin-bottom:12px;">
-      <b>Quest:</b> ${q.name} (${q.startTime} - ${q.endTime})<br>
-      <span style="color:var(--sub); font-size:0.8rem;">Scheduled: ${q.durationMin} mins | Full Value: ₹${q.expectedAmt}</span>
-    </div>
-
-    <div class="sub-box">
-      <div style="font-weight:700; font-size:0.8rem; margin-bottom:6px;">Step 1: Duration Check</div>
-      <label style="display:block; margin-bottom:6px; font-size:0.8rem; cursor:pointer;">
-        <input type="radio" name="durChoice" value="full" checked onchange="togglePartialInput(false)">
-        Worked Full Scheduled Time (${q.durationMin} mins)
-      </label>
-      <label style="display:block; font-size:0.8rem; cursor:pointer;">
-        <input type="radio" name="durChoice" value="partial" onchange="togglePartialInput(true)">
-        Worked Partial Time
-      </label>
-      <div id="partialBox" style="display:none; margin-top:8px;">
-        <input type="number" id="actualMinutesInput" placeholder="Actual minutes worked" min="1" max="${q.durationMin}">
-      </div>
-    </div>
-
-    <div class="sub-box">
-      <div style="font-weight:700; font-size:0.8rem; margin-bottom:6px;">Step 2: Focus & Productivity</div>
-      <label style="display:block; margin-bottom:6px; font-size:0.8rem; cursor:pointer;">
-        <input type="radio" name="prodChoice" value="full" checked>
-        100% Focused / High Productivity
-      </label>
-      <label style="display:block; font-size:0.8rem; cursor:pointer;">
-        <input type="radio" name="prodChoice" value="low">
-        Low Productivity (${q.lowPct}% Payout as per Rate)
-      </label>
-    </div>
-
-    <button class="btn" style="width:100%;" onclick="submitQuestReview()">Confirm & Claim</button>
-  `;
-
-  openModal("questVerifyModal");
-}
-
-function togglePartialInput(show) {
-  document.getElementById("partialBox").style.display = show ? "block" : "none";
-}
-
-function submitQuestReview() {
-  if (!activeReviewQuest) return;
-  const cur = getCur();
-  const q = activeReviewQuest;
-  const isPartial = document.querySelector('input[name="durChoice"]:checked').value === "partial";
-  const isLow = document.querySelector('input[name="prodChoice"]:checked').value === "low";
-
-  let actualMin = q.durationMin;
-  if (isPartial) {
-    const val = parseFloat(document.getElementById("actualMinutesInput").value);
-    if (!val || val <= 0) return alert("Please enter valid worked minutes!");
-    actualMin = val;
-  }
-
-  let finalAmt = calculateQuestAmount(q, actualMin);
-  let statusTag = "";
-
-  if (isLow) {
-    const pct = q.lowPct || 50;
-    finalAmt = (finalAmt * pct) / 100;
-    statusTag = ` (${pct}% Low Focus)`;
-  }
-  finalAmt = parseFloat(finalAmt.toFixed(2));
-
-  const ist = getIST();
-  if (q.type === "Earn") cur.balance += finalAmt;
-  else cur.balance -= finalAmt;
-
-  cur.logs.unshift({
-    name: `✓ ${q.name}${statusTag}`,
-    category: q.category,
-    type: q.type,
-    amt: finalAmt,
-    qty: actualMin,
-    unit: q.unit,
-    timestamp: Date.now(),
-    dateOnly: ist.dateOnly,
-    timeString: ist.timeString,
-    isoDate: ist.isoDate
-  });
-
-  if (q.type === "Earn") checkStreak();
-
-  const idx = cur.quests.findIndex(item => item.id === q.id);
-  if (idx !== -1) cur.quests.splice(idx, 1);
-
-  closeModal("questVerifyModal");
-  activeReviewQuest = null;
-  persist();
-  }
-  // --- Direct Log Handling ---
-document.getElementById('formLog').onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  const actId = parseInt(document.getElementById('selectAct').value);
-  if (!actId) return alert("Select an activity!");
-  const qty = parseFloat(document.getElementById('inputDuration').value);
-  const act = cur.acts.find(a => a.id === actId);
-  if (!act) return alert("Invalid activity!");
-
-  const isLow = document.getElementById('directLowProdCheck').checked;
-  let total = act.rate * qty;
-  let tag = "";
-
-  if (isLow) {
-    const pct = act.lowPct || 50;
-    total = (total * pct) / 100;
-    tag = ` (${pct}% Low Focus)`;
-  }
-  total = parseFloat(total.toFixed(2));
-
-  if (act.type === 'Earn') cur.balance += total;
-  else cur.balance -= total;
-
-  const ist = getIST();
-  cur.logs.unshift({
-    name: `${act.name}${tag}`,
-    category: act.category || "General",
-    type: act.type,
-    amt: total,
-    qty: qty,
-    unit: act.unit,
-    timestamp: Date.now(),
-    dateOnly: ist.dateOnly,
-    timeString: ist.timeString,
-    isoDate: ist.isoDate
-  });
-
-  if (act.type === 'Earn') checkStreak();
-  persist();
-  document.getElementById('inputDuration').value = '';
-  document.getElementById('directLowProdCheck').checked = false;
-};
-
-// --- Streaks, Daily Targets & Leaderboard ---
-function getTodayEarned() {
-  const cur = getCur();
-  const today = getIST().dateOnly;
-  return (cur.logs || [])
-    .filter(l => l.dateOnly === today && l.type === 'Earn')
-    .reduce((acc, curr) => acc + curr.amt, 0);
-}
-
-function checkStreak() {
-  const cur = getCur();
-  const today = getIST().dateOnly;
-  const target = cur.dailyTarget || 100;
-  const earned = getTodayEarned();
-
-  if (earned >= target && cur.lastStreakDate !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    if (cur.lastStreakDate === yesterday) {
-      cur.streak = (cur.streak || 0) + 1;
-    } else {
-      cur.streak = 1;
+    let auth = null, db = null, currentUser = null;
+    try {
+      if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+    } catch (e) {
+      console.log("Firebase init skipped/offline mode:", e);
     }
-    cur.lastStreakDate = today;
-    if (!cur.streakHistory) cur.streakHistory = {};
-    cur.streakHistory[today] = cur.streak;
-  }
-}
 
-function recalcStreakOnDelete(dOnly, dIso) {
-  const cur = getCur();
-  const target = cur.dailyTarget || 100;
-  const dayEarned = (cur.logs || [])
-    .filter(l => (l.dateOnly === dOnly || l.isoDate === dIso) && l.type === 'Earn')
-    .reduce((a, b) => a + b.amt, 0);
+    // --- State Defaults ---
+    const defaultState = {
+      activeProfile: "Default",
+      theme: "default",
+      profiles: {
+        "Default": {
+          balance: 0,
+          streak: 0,
+          lastActiveDate: "",
+          acts: [
+            { id: 1, name: "Focus Work", type: "Earn", rate: 50, unit: "hr" },
+            { id: 2, name: "Reading", type: "Earn", rate: 20, unit: "hr" },
+            { id: 3, name: "Distraction", type: "Spend", rate: 30, unit: "hr" }
+          ],
+          lvls: [
+            { lvl: 1, title: "Novice", target: 500 },
+            { lvl: 2, title: "Disciplined", target: 1500 },
+            { lvl: 3, title: "Master", target: 3500 }
+          ],
+          quests: [],
+          logs: [],
+          notes: []
+        }
+      }
+    };
 
-  if (dayEarned < target) {
-    if (cur.streakHistory && cur.streakHistory[dOnly]) {
-      delete cur.streakHistory[dOnly];
-    }
-    if (cur.lastStreakDate === dOnly) {
-      const remainingDays = Object.keys(cur.streakHistory || {}).sort();
-      if (remainingDays.length > 0) {
-        const lastDay = remainingDays[remainingDays.length - 1];
-        cur.lastStreakDate = lastDay;
-        cur.streak = cur.streakHistory[lastDay];
-      } else {
-        cur.lastStreakDate = "";
-        cur.streak = 0;
+    let store = JSON.parse(localStorage.getItem('rq_db')) || defaultState;
+
+    function persist() {
+      localStorage.setItem('rq_db', JSON.stringify(store));
+      if (currentUser && db) {
+        db.collection("users").doc(currentUser.uid).set(store).catch(console.error);
       }
     }
-  }
-}
 
-function changeDailyTarget() {
-  const cur = getCur();
-  const val = prompt("Enter new Daily Target (₹):", cur.dailyTarget || 100);
-  if (val && !isNaN(val) && parseFloat(val) > 0) {
-    cur.dailyTarget = parseFloat(val);
-    persist();
-  }
-}
-function getLeaderboard() {
-  const keys = Object.keys(store.profiles || {}).filter(k => k && k !== "undefined" && k !== "null");
-  if (keys.length < 2) return null;
-  const sorted = keys.map(k => ({ name: k, streak: (store.profiles[k] && store.profiles[k].streak) || 0 })).sort((a, b) => b.streak - a.streak);
-  const idx = sorted.findIndex(p => p.name === store.activeProfile);
-  if (idx === 0) return { r: 1, t: "🥇 Top Streaker" };
-  if (idx === 1) return { r: 2, t: "🥈 2nd Place" };
-  if (idx === 2) return { r: 3, t: "🥉 3rd Place" };
-  return null;
-}
-  
+    function getCur() {
+      if (!store.profiles || typeof store.profiles !== 'object') store.profiles = { "Default": defaultState.profiles.Default };
+      if (!store.activeProfile || !store.profiles[store.activeProfile]) store.activeProfile = Object.keys(store.profiles)[0] || "Default";
+      return store.profiles[store.activeProfile];
+    }
 
+    // --- Theme Handling ---
+    function setTheme(t) {
+      store.theme = t;
+      document.body.className = t === 'default' ? '' : t;
+      persist();
+    }
 
-// --- Categories, Rates & Notes Forms ---
-document.getElementById('formCategory').onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  let c = document.getElementById('catInput').value.trim();
-  if (!c || cur.categories.includes(c)) return;
-  cur.categories.push(c);
-  persist();
-  document.getElementById('catInput').value = '';
-};
+    // --- Navigation & UI ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      event.target.classList.add('active');
+    }
 
-function delCat(i) {
-  const cur = getCur();
-  if (cur.categories.length <= 1) return alert("Keep at least 1 category!");
-  cur.categories.splice(i, 1);
-  persist();
-}
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+          function updateUI() {
+      const cur = getCur();
 
-document.getElementById('formRate').onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  cur.acts.push({
-    id: Date.now(),
-    name: document.getElementById('rateName').value.trim(),
-    category: document.getElementById('rateCategorySelect').value,
-    type: document.getElementById('rateType').value,
-    rate: parseFloat(document.getElementById('rateVal').value),
-    unit: document.getElementById('rateUnit').value,
-    lowPct: parseFloat(document.getElementById('rateLowPct').value) || 50
-  });
-  persist();
-  document.getElementById('formRate').reset();
-};
+      // Clean invalid profiles
+      if (store.profiles) {
+        delete store.profiles["undefined"];
+        delete store.profiles["null"];
+        delete store.profiles["1"];
+        delete store.profiles[""];
+      }
 
-function delRate(i) {
-  let cur = getCur();
-  if (cur.acts.length <= 1) return alert("Must keep at least 1 rate!");
-  cur.acts.splice(i, 1);
-  persist();
-}
+      // Populate Profiles Dropdown
+      const validProfiles = Object.keys(store.profiles || {}).filter(k => k && k !== "undefined" && k !== "null" && k !== "1");
+      const selector = document.getElementById('saveSelector');
+      selector.innerHTML = validProfiles.map(k => `<option value="${k}" ${k === store.activeProfile ? 'selected' : ''}>${k}</option>`).join('');
 
-document.getElementById('formLevel').onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  cur.lvls.push({
-    lvl: parseInt(document.getElementById('lvlNum').value),
-    target: parseFloat(document.getElementById('lvlTgt').value),
-    title: document.getElementById('lvlTitle').value.trim()
-  });
-  persist();
-  document.getElementById('formLevel').reset();
-};
+      // Top Badges
+      document.getElementById('walletBalance').innerText = `₹ ${(cur.balance || 0).toFixed(2)}`;
+      document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
 
-// --- Notes & Folders ---
-function createFolder() {
-  const cur = getCur();
-  const f = prompt("Enter folder name:");
-  if (f && !cur.folders.includes(f)) {
-    cur.folders.push(f);
-    cur.activeFolder = f;
-    persist();
-  }
-}
+      // Select Quest Activities
+      const actSelect = document.getElementById('selectQuestAct');
+      actSelect.innerHTML = (cur.acts || []).map(a => `<option value="${a.id}">${a.name} (${a.type === 'Earn' ? '+' : '-'}₹${a.rate}/${a.unit})</option>`).join('');
 
-function setFolder(f) {
-  getCur().activeFolder = f;
-  renderNotes();
-}
-
-document.getElementById('formNote').onsubmit = (e) => {
-  e.preventDefault();
-  const cur = getCur();
-  cur.notes.unshift({
-    id: Date.now(),
-    folder: cur.activeFolder || "General",
-    title: document.getElementById('noteTitle').value.trim(),
-    content: document.getElementById('noteContent').value.trim(),
-    time: getIST().timeString
-  });
-  persist();
-  document.getElementById('noteTitle').value = '';
-  document.getElementById('noteContent').value = '';
-};
-
-function delNote(id) {
-  const cur = getCur();
-  cur.notes = cur.notes.filter(n => n.id !== id);
-  persist();
-  }
-  // --- Navigation & Modals ---
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-  if (tabId === 'tabCharts') renderCharts();
-  if (tabId === 'tabReport') renderReports();
-}
-
-function openModal(id) { document.getElementById(id).classList.add('show'); if (id === 'manageModal') renderManageList(); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-function toggleMenu() { document.getElementById('menuDropdown').classList.toggle('show'); }
-window.onclick = (e) => {
-  if (!e.target.matches('.menu-btn')) {
-    const d = document.getElementById('menuDropdown');
-    if (d && d.classList.contains('show')) d.classList.remove('show');
-  }
-};
-
-function setTheme(th) {
-  const cur = getCur();
-  cur.theme = th;
-  persist();
-  applyTheme();
-  closeModal('themeModal');
-}
-
-function applyTheme() {
-  const cur = getCur();
-  document.body.className = '';
-  if (cur.theme && cur.theme !== 'default') document.body.classList.add(cur.theme);
-}
-
-// --- Multi-Profile Handling ---
-function switchProfile(name) {
-  store.activeProfile = name;
-  localStorage.setItem("rq_db", JSON.stringify(store));
-  updateUI();
-}
-
-function addProfile() {
-  const name = prompt("Enter new Profile / Subject name:");
-  if (name && !store.profiles[name]) {
-    store.profiles[name] = JSON.parse(JSON.stringify(defaultState));
-    store.activeProfile = name;
-    persist();
-  }
-}
-
-// --- Protected Safe-Delete via 3-Dots Menu ---
-function renderManageList() {
-  const cur = getCur();
-  document.getElementById('manageLogsList').innerHTML = (cur.logs || []).map((l, i) => `
-    <div class="item">
-      <div>
-        <strong>${l.name}</strong> <small style="color:var(--sub);">(${l.timeString || ''})</small><br>
-        <span class="${l.type === 'Earn' ? 'earn' : 'spend'}">${l.type === 'Earn' ? '+' : '-'}₹${l.amt.toFixed(2)}</span>
-      </div>
-      <button class="del" onclick="delLog(${i})">Delete</button>
-    </div>
-  `).join('') || '<p style="color:var(--sub); font-size:0.8rem; text-align:center;">No logs to manage.</p>';
-}
-
-function delLog(i) {
-  if (!confirm("Are you sure? This recalculates Balance, Streak progress, and Charts!")) return;
-  const cur = getCur();
-  const it = cur.logs[i];
-  if (it.type === 'Earn') cur.balance -= it.amt;
-  else cur.balance += it.amt;
-
-  const dOnly = it.dateOnly;
-  const dIso = it.isoDate;
-  cur.logs.splice(i, 1);
-
-  if (it.type === 'Earn') recalcStreakOnDelete(dOnly, dIso);
-  persist();
-  renderManageList();
-}
-
-// --- Activity Search & Filter ---
-function filterActivities() {
-  const q = (document.getElementById('actSearchInput').value || '').toLowerCase();
-  const cur = getCur();
-  const filtered = cur.acts.filter(a => a.name.toLowerCase().includes(q) || (a.category && a.category.toLowerCase().includes(q)));
-  
-  const html = filtered.length ? filtered.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (₹${a.rate}/${a.unit})</option>`).join('') : '<option value="">No matching activity</option>';
-  document.getElementById('selectAct').innerHTML = html;
-}
-
-// --- Charts Rendering ---
-function setChartFilter(f, btn) {
-  chartFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCharts();
-}
-
-function renderCharts() {
-  const cur = getCur();
-  const now = Date.now();
-  let limit = Infinity;
-  if (chartFilter === '1D') limit = 86400000;
-  else if (chartFilter === '1W') limit = 7 * 86400000;
-  else if (chartFilter === '1M') limit = 30 * 86400000;
-  else if (chartFilter === '1Y') limit = 365 * 86400000;
-
-  const logs = (cur.logs || []).filter(l => (now - (l.timestamp || now)) <= limit).slice().reverse();
-  let cum = 0;
-  const labels = [];
-  const data = [];
-  const catDist = {};
-
-  logs.forEach(l => {
-    cum += (l.type === 'Earn' ? l.amt : -l.amt);
-    labels.push(l.timeString ? l.timeString.split(' ')[0] : 'Log');
-    data.push(cum);
-    const cat = l.category || "General";
-    catDist[cat] = (catDist[cat] || 0) + l.amt;
-  });
-
-  if (data.length) { labels.push("Now"); data.push(cur.balance); }
-
-  const ctxT = document.getElementById('trendChart').getContext('2d');
-  if (trendChart) trendChart.destroy();
-  trendChart = new Chart(ctxT, {
-    type: 'line',
-    data: {
-      labels: labels.length ? labels : ['Start'],
-      datasets: [{ label: 'Net Wealth Flow (₹)', data: data.length ? data : [cur.balance], borderColor: '#38bdf8', borderWidth: 2, fill: false, tension: 0.35, pointRadius: 2 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  const ctxS = document.getElementById('streakChart').getContext('2d');
-  if (streakChart) streakChart.destroy();
-  const sKeys = Object.keys(cur.streakHistory || {}).slice(-7);
-  streakChart = new Chart(ctxS, {
-    type: 'bar',
-    data: {
-      labels: sKeys.length ? sKeys : ['Today'],
-      datasets: [{ label: 'Daily Streak Milestone', data: sKeys.length ? sKeys.map(k => cur.streakHistory[k]) : [cur.streak || 0], backgroundColor: '#f59e0b', borderRadius: 6 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  const ctxC = document.getElementById('categoryChart').getContext('2d');
-  if (catChart) catChart.destroy();
-  const cK = Object.keys(catDist);
-  catChart = new Chart(ctxC, {
-    type: 'doughnut',
-    data: {
-      labels: cK.length ? cK : ['None'],
-      datasets: [{ data: cK.length ? Object.values(catDist) : [1], backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'], borderWidth: 0 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-// --- Reports & Notes Rendering ---
-function renderReports() {
-  const cur = getCur();
-  const grp = {};
-  (cur.logs || []).forEach(l => {
-    const k = l.dateOnly || "Earlier";
-    if (!grp[k]) grp[k] = { e: 0, s: 0, c: 0 };
-    if (l.type === 'Earn') grp[k].e += l.amt; else grp[k].s += l.amt;
-    grp[k].c++;
-  });
-  document.getElementById('reportList').innerHTML = !Object.keys(grp).length ? '<p style="color:var(--sub); font-size:0.8rem; text-align:center;">No history recorded yet.</p>' :
-    Object.keys(grp).map(d => `
-      <div class="item" style="flex-direction:column; align-items:flex-start; gap:6px;">
-        <div style="display:flex; justify-content:space-between; width:100%;"><strong>${d}</strong> <small style="color:var(--sub);">${grp[d].c} activities</small></div>
-        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.8rem;">
-          <span class="earn">+₹${grp[d].e.toFixed(1)}</span>
-          <span class="spend">-₹${grp[d].s.toFixed(1)}</span>
-          <b>Net: ₹${(grp[d].e - grp[d].s).toFixed(1)}</b>
+      // Render History
+      document.getElementById('listHistory').innerHTML = (cur.logs || []).slice(0, 10).map(l => `
+        <div class="item">
+          <div><strong>${l.name}</strong><br><small style="color:var(--sub); font-size:0.75rem;">${l.time}</small></div>
+          <span style="color:${l.type === 'Earn' ? 'var(--earn)' : 'var(--spend)'}; font-weight:bold;">${l.type === 'Earn' ? '+' : '-'}₹${l.amount}</span>
         </div>
-      </div>
-    `).join('');
-}
+      `).join('') || '<p style="text-align:center; color:var(--sub); font-size:0.8rem;">No activity yet.</p>';
 
-function renderNotes() {
-  const cur = getCur();
-  if (!cur.folders) cur.folders = ["General"];
-  if (!cur.activeFolder) cur.activeFolder = cur.folders[0];
-
-  document.getElementById('folderList').innerHTML = cur.folders.map(f => `
-    <button class="folder-btn ${f === cur.activeFolder ? 'active' : ''}" onclick="setFolder('${f}')">${f}</button>
-  `).join('');
-
-  const list = (cur.notes || []).filter(n => (n.folder || "General") === cur.activeFolder);
-  document.getElementById('notesContainer').innerHTML = !list.length ? '<p style="color:var(--sub); font-size:0.8rem; text-align:center;">No notes in this folder.</p>' :
-    list.map(n => `
-      <div class="item" style="flex-direction:column; align-items:flex-start; gap:4px;">
-        <div style="display:flex; justify-content:space-between; width:100%;">
-          <strong style="color:var(--primary);">${n.title}</strong>
-          <button class="del" onclick="delNote(${n.id})">✕</button>
+      // Render Rates
+      document.getElementById('listRates').innerHTML = (cur.acts || []).map(a => `
+        <div class="item">
+          <div><strong>${a.name}</strong> <span class="tag">${a.type}</span><br><small style="color:var(--sub);">₹${a.rate} per ${a.unit}</small></div>
         </div>
-        <div style="font-size:0.8rem; white-space:pre-wrap;">${n.content}</div>
-        <small style="color:var(--sub); font-size:0.68rem;">${n.time || ''}</small>
-      </div>
-    `).join('');
-}
+      `).join('');
 
-// --- Main UI Rendering Loop ---
-function updateUI() {
-  const cur = getCur();
-    if (store.profiles) {
-    delete store.profiles["undefined"];
-    delete store.profiles["null"];
-    delete store.profiles["1"];
-    delete store.profiles[""];
-  }
-  const validProfiles = Object.keys(store.profiles || {}).filter(k => k && k !== "undefined" && k !== "null" && k !== "1");
-  document.getElementById('saveSelector').innerHTML = validProfiles.map(k => `<option value="${k}" ${k === store.activeProfile ? 'selected' : ''}>${k}</option>`).join('');
-  
-  document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
-  document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
-
-  const r = getLeaderboard();
-  const rb = document.getElementById('rankBadge');
-  if (r) { rb.style.display = "inline-block"; rb.innerText = r.t; rb.className = `rank-badge rank-${r.r}`; }
-  else rb.style.display = "none";
-
-  document.getElementById('dailyTargetDisplay').innerText = `₹${cur.dailyTarget || 100}`;
-  document.getElementById('todayEarnedDisplay').innerText = `₹${getTodayEarned().toFixed(1)}`;
-
-  cur.lvls.sort((a, b) => a.lvl - b.lvl);
-  let lvl = cur.lvls[0];
-  for (let l of cur.lvls) { if (cur.balance >= l.target) lvl = l; }
-  document.getElementById('levelBadge').innerText = `Level ${lvl.lvl} : ${lvl.title}`;
-  document.getElementById('progressFill').style.width = `${Math.min(100, Math.max(0, (cur.balance / (lvl.target * 1.5 || 500)) * 100))}%`;
-
-  filterActivities();
-  document.getElementById('selectQuestAct').innerHTML = cur.acts.map(a => `<option value="${a.id}">[${a.category || 'General'}] ${a.name} (₹${a.rate}/${a.unit})</option>`).join('');
-  document.getElementById('rateCategorySelect').innerHTML = cur.categories.map(c => `<option value="${c}">${c}</option>`).join('');
-
-  // Pending Quests Render
-  document.getElementById('listPendingQuests').innerHTML = !(cur.quests && cur.quests.length) ? '<p style="color:var(--sub); font-size:0.8rem; text-align:center;">No pending quests right now.</p>' :
-    cur.quests.map(q => `
-      <div class="item">
-        <div>
-          <strong>${q.name}</strong> <small style="color:var(--sub);">(${q.startTime} - ${q.endTime})</small><br>
-          <span style="color:var(--primary); font-size:0.75rem;">Est: ₹${q.expectedAmt} (${q.durationMin}m)</span>
+      // Render Levels
+      document.getElementById('listLevels').innerHTML = (cur.lvls || []).map(l => `
+        <div class="item">
+          <div><strong>Lvl ${l.lvl}: ${l.title}</strong><br><small style="color:var(--sub);">Target: ₹${l.target}</small></div>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button class="action-btn-tick" onclick="reviewQuest(${q.id})" title="Complete Quest">✓</button>
-          <button class="action-btn-cross" onclick="failQuest(${q.id})" title="Fail Quest (Penalty)">✕</button>
+      `).join('');
+
+      // Render Notes
+      document.getElementById('notesContainer').innerHTML = (cur.notes || []).map((n, i) => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>${n.title}</strong>
+            <button class="del" onclick="deleteNote(${i})">✕</button>
+          </div>
+          <p style="font-size:0.85rem; margin-top:6px; white-space:pre-wrap;">${n.content}</p>
         </div>
-      </div>
-    `).join('');
+      `).join('') || '<p style="text-align:center; color:var(--sub); font-size:0.8rem;">No notes saved.</p>';
+    }
 
-  // Recent History Render (Protected - No Delete Buttons)
-  document.getElementById('listHistory').innerHTML = !(cur.logs && cur.logs.length) ? '<p style="color:var(--sub); font-size:0.8rem; text-align:center;">No activity logged yet.</p>' :
-    cur.logs.slice(0, 10).map(h => `
-      <div class="item">
-        <div><strong>${h.name}</strong><span class="tag">${h.category}</span><br><small style="color:var(--sub);">${h.timeString || ''}</small></div>
-        <span class="${h.type === 'Earn' ? 'earn' : 'spend'}">${h.type === 'Earn' ? '+' : '-'}₹${h.amt.toFixed(2)}</span>
-      </div>
-    `).join('');
+    function switchProfile(name) {
+      if (store.profiles[name]) {
+        store.activeProfile = name;
+        persist();
+        updateUI();
+      }
+    }
 
-  document.getElementById('listCategories').innerHTML = cur.categories.map((c, i) => `
-    <div class="item"><span>🏷️ ${c}</span><button class="del" onclick="delCat(${i})">✕</button></div>
-  `).join('');
+    function addProfile() {
+      const name = document.getElementById('newProfileName').value.trim();
+      if (!name || name === "undefined" || name === "1") return;
+      if (!store.profiles[name]) {
+        store.profiles[name] = JSON.parse(JSON.stringify(defaultState.profiles.Default));
+        store.activeProfile = name;
+        persist();
+        updateUI();
+        closeModal('manageModal');
+        document.getElementById('newProfileName').value = "";
+      }
+    }
 
-  document.getElementById('listRates').innerHTML = cur.acts.map((a, i) => `
-    <div class="item">
-      <div><strong>${a.name}</strong> <small style="color:var(--sub);">(${a.unit}) | Low: ${a.lowPct || 50}%</small></div>
-      <div><span class="${a.type === 'Earn' ? 'earn' : 'spend'}">₹${a.rate}</span> <button class="del" onclick="delRate(${i})">✕</button></div>
-    </div>
-  `).join('');
+    function handleQuestSubmit(e) {
+      e.preventDefault();
+      const cur = getCur();
+      const actId = parseInt(document.getElementById('selectQuestAct').value);
+      const qty = parseFloat(document.getElementById('questQty').value);
+      const act = cur.acts.find(a => a.id === actId);
+      if (!act) return;
 
-  document.getElementById('listLevels').innerHTML = cur.lvls.map((l, i) => `
-    <div class="item">
-      <div><strong>Lvl ${l.lvl}: ${l.title}</strong></div>
-      <div>Target: ₹${l.target} <button class="del" onclick="if(cur.lvls.length>1){cur.lvls.splice(${i},1);persist();}">✕</button></div>
-    </div>
-  `).join('');
+      const amt = act.rate * qty;
+      if (act.type === 'Earn') cur.balance += amt;
+      else cur.balance -= amt;
 
-  renderNotes();
-}
+      cur.logs.unshift({
+        name: act.name,
+        type: act.type,
+        amount: amt,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
 
-// --- Auth Handling (Mobile Optimized Redirect) ---
-function toggleAuth() {
-  if (!auth) return alert("Firebase Auth not configured.");
-  if (currentUser) {
-    auth.signOut();
-  } else {
-    const p = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(p);
-  }
-}
+      persist();
+      updateUI();
+      e.target.reset();
+    }
 
-if (auth) {
-  auth.getRedirectResult().catch(e => {
-    if (e && e.message) alert(e.message);
-  });
+    function handleNoteSubmit(e) {
+      e.preventDefault();
+      const cur = getCur();
+      cur.notes = cur.notes || [];
+      cur.notes.unshift({
+        title: document.getElementById('noteTitle').value,
+        content: document.getElementById('noteContent').value
+      });
+      persist();
+      updateUI();
+      e.target.reset();
+    }
 
-  auth.onAuthStateChanged(u => {
-    currentUser = u;
-    const ui = document.getElementById("userInfo");
-    const ab = document.getElementById("authBtn");
-    if (u) {
-      ui.innerHTML = `<img src="${u.photoURL || ''}" class="user-avatar"><span>${u.displayName ? u.displayName.split(' ')[0] : 'Hero'}</span>`;
-      ab.innerText = "Logout";
-      db.collection("users").doc(u.uid).get().then(doc => {
-        if (doc.exists) { 
-          store = doc.data(); 
-          updateUI(); 
+    function deleteNote(i) {
+      const cur = getCur();
+      cur.notes.splice(i, 1);
+      persist();
+      updateUI();
+      }
+          // --- Auth Handling (Mobile Optimized Redirect) ---
+    function toggleAuth() {
+      if (!auth) return alert("Firebase Auth initialization failed.");
+      if (currentUser) {
+        auth.signOut().then(() => {
+          currentUser = null;
+          updateUI();
+        });
+      } else {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider);
+      }
+    }
+
+    if (auth) {
+      auth.getRedirectResult().catch(e => {
+        if (e && e.message) alert("Login Error: " + e.message);
+      });
+
+      auth.onAuthStateChanged(u => {
+        currentUser = u;
+        const ui = document.getElementById("userInfo");
+        const ab = document.getElementById("authBtn");
+        if (u) {
+          ui.innerHTML = `<img src="${u.photoURL || ''}" class="user-avatar"><span>${u.displayName ? u.displayName.split(' ')[0] : 'Hero'}</span>`;
+          ab.innerText = "Logout";
+          db.collection("users").doc(u.uid).get().then(doc => {
+            if (doc.exists) { 
+              store = doc.data(); 
+              setTheme(store.theme || 'default');
+              updateUI(); 
+            } else {
+              persist();
+            }
+          });
         } else {
-          persist();
+          ui.innerHTML = `<span>🔒 Guest</span>`;
+          ab.innerText = "Login";
         }
       });
-    } else {
-      ui.innerHTML = `<span>🔒 Guest</span>`;
-      ab.innerText = "Login";
     }
-  });
-}
-  
 
-applyTheme();
-updateUI();
-</script>
+    // Init Call
+    if (store.theme) setTheme(store.theme);
+    updateUI();
+  </script>
 </body>
 </html>
