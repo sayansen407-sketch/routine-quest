@@ -160,7 +160,7 @@
   <button onclick="switchTab('tabRates', this)">Rates</button>
   <button onclick="switchTab('tabLevels', this)">Levels</button>
 </div>
-  <!-- Tab 1: Activity -->
+    <!-- Tab 1: Activity -->
 <div id="tabLog" class="tab active card">
   <!-- Sub-mode: Standard vs Scheduled Quest -->
   <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -275,7 +275,7 @@
   <div class="list" id="listCategories"></div>
 </div>
 
-<!-- Tab 6: Rates (Clean - No Productivity Input) -->
+<!-- Tab 6: Rates -->
 <div id="tabRates" class="tab card">
   <form id="formRate">
     <input type="text" id="rateName" placeholder="Activity Name" required>
@@ -353,7 +353,7 @@
     </div>
   </div>
 </div>
-<script>
+  <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDZ7JwsMsB4KERLbq2NrzWn17Bq4LxVSqY",
   authDomain: "routine-quest-8613f.firebaseapp.com",
@@ -368,6 +368,47 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Unlimited Client-Side Storage via IndexedDB
+const idb = {
+  dbPromise: null,
+  init() {
+    if (!this.dbPromise) {
+      this.dbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open("RoutineQuestUnlimitedDB", 1);
+        req.onupgradeneeded = (e) => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains("app_state")) d.createObjectStore("app_state");
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    return this.dbPromise;
+  },
+  async get(key) {
+    try {
+      const d = await this.init();
+      return new Promise((resolve) => {
+        const tx = d.transaction("app_state", "readonly");
+        const req = tx.objectStore("app_state").get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) { return null; }
+  },
+  async set(key, val) {
+    try {
+      const d = await this.init();
+      return new Promise((resolve) => {
+        const tx = d.transaction("app_state", "readwrite");
+        tx.objectStore("app_state").put(val, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
+    } catch (e) {}
+  }
+};
+
 let currentUser = null;
 let trendChart = null;
 let streakChart = null;
@@ -377,7 +418,7 @@ let activeFolder = "General";
 let activeActMode = "standard";
 let currentQuestScheduleType = 'time';
 
-let store = JSON.parse(localStorage.getItem('rq_db')) || {
+let store = {
   active: "Default",
   theme: "default",
   categories: ["General", "Study", "Fitness", "Work", "Distraction"],
@@ -406,10 +447,6 @@ let store = JSON.parse(localStorage.getItem('rq_db')) || {
   }
 };
 
-if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
-if (!store.folders) store.folders = ["General", "Ideas"];
-if (!store.notes) store.notes = [];
-
 function getCur() {
   if (!store.profiles || typeof store.profiles !== 'object') {
     store.profiles = { "Default": { balance: 0, streak: 0, dailyTarget: 100, lastActiveDate: "", streakHistory: {}, acts: [], lvls: [], pendingQuests: [], logs: [] } };
@@ -419,12 +456,7 @@ function getCur() {
   if (!cur.dailyTarget) cur.dailyTarget = 100;
   if (!cur.streakHistory) cur.streakHistory = {};
   if (!cur.pendingQuests) cur.pendingQuests = [];
-  if ((!cur.logs || cur.logs.length === 0) && cur.balance <= 0) {
-    cur.balance = 0;
-    cur.streak = 0;
-    cur.lastActiveDate = "";
-    cur.streakHistory = {};
-  }
+  if (!cur.logs) cur.logs = [];
   return cur;
 }
 
@@ -436,7 +468,7 @@ function applyTheme() {
 function setTheme(t) {
   store.theme = t;
   applyTheme();
-  persist();
+  persistMeta();
   closeModal('themeModal');
 }
 
@@ -561,7 +593,7 @@ function handleTimeboundSubmit(e) {
     });
   }
 
-  persist();
+  persistMeta();
   updateUI();
   e.target.reset();
   if (currentQuestScheduleType === 'untimed') {
@@ -569,7 +601,7 @@ function handleTimeboundSubmit(e) {
   }
   updateQuestEstimatedPayout();
 }
- function failQuest(id) {
+    function failQuest(id) {
   const cur = getCur();
   const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
   if (qIndex === -1) return;
@@ -579,21 +611,24 @@ function handleTimeboundSubmit(e) {
 
   cur.balance -= q.estimatedAmt;
   const ist = getIST();
-  cur.logs.unshift({
+  const logEntry = {
+    id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     name: `${q.name} (Missed Task)`,
     category: q.category || "General",
     type: "Spend",
     amt: q.estimatedAmt,
     qty: q.qty || 1,
-    unit: q.unit,
+    unit: q.unit || 'Task',
     timestamp: Date.now(),
     dateOnly: ist.dateOnly,
     timeString: ist.timeString,
     isoDate: ist.isoDate
-  });
+  };
 
+  cur.logs.unshift(logEntry);
   cur.pendingQuests.splice(qIndex, 1);
-  persist();
+  saveSingleLogUnlimited(logEntry);
+  persistMeta();
   updateUI();
 }
 
@@ -718,29 +753,47 @@ function confirmQuestReward(qId) {
 
   const ist = getIST();
   const prodTag = window.curVerifyingQuest.prodPct < 100 ? ` [${window.curVerifyingQuest.prodPct}% Prod]` : '';
-  const durTag = (q.scheduleType !== 'untimed' && window.curVerifyingQuest.durationType === 'partial') ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
+  const isTimed = q.scheduleType !== 'untimed';
+  const durTag = (isTimed && window.curVerifyingQuest.durationType === 'partial') ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
 
-  cur.logs.unshift({
+  const displayQty = isTimed ? (window.curVerifyingQuest.durationType === 'partial' ? window.curVerifyingQuest.actualMinutes : q.totalMinutes) : (q.qty || 1);
+  const displayUnit = isTimed ? 'mins' : (q.unit || 'Task');
+
+  const logEntry = {
+    id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     name: `${q.name}${durTag}${prodTag}`,
     category: q.category || "General",
     type: q.type,
     amt: earnedAmt,
-    qty: q.qty || 1,
-    unit: q.unit,
+    qty: displayQty,
+    unit: displayUnit,
     timestamp: Date.now(),
     dateOnly: ist.dateOnly,
     timeString: ist.timeString,
     isoDate: ist.isoDate
-  });
+  };
 
+  cur.logs.unshift(logEntry);
   if (q.type === 'Earn') checkStreak();
 
   cur.pendingQuests.splice(qIndex, 1);
   closeModal('questVerifyModal');
-  persist();
+  saveSingleLogUnlimited(logEntry);
+  persistMeta();
   updateUI();
 }
-  function getIST() {
+
+// Unlimited Sub-collection Firestore Writer
+async function saveSingleLogUnlimited(logItem) {
+  if (currentUser && db) {
+    try {
+      await db.collection("users").doc(currentUser.uid)
+        .collection("profiles").doc(store.active)
+        .collection("logs").doc(logItem.id).set(logItem);
+    } catch (e) { console.error("Cloud log sync error:", e); }
+  }
+    }
+    function getIST() {
   const now = new Date();
   const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
   const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
@@ -808,14 +861,20 @@ function changeDailyTarget() {
   if (v && !isNaN(v) && parseFloat(v) > 0) {
     cur.dailyTarget = parseFloat(v);
     checkStreak();
-    persist();
+    persistMeta();
   }
 }
 
-async function persist() {
-  localStorage.setItem('rq_db', JSON.stringify(store));
+async function persistMeta() {
+  await idb.set('rq_store', store);
   if (currentUser && db) {
-    try { await db.collection("users").doc(currentUser.uid).set(store); } catch (e) { console.error(e); }
+    try {
+      const clone = JSON.parse(JSON.stringify(store));
+      Object.keys(clone.profiles).forEach(p => {
+        clone.profiles[p].logs = [];
+      });
+      await db.collection("users").doc(currentUser.uid).set(clone);
+    } catch (e) { console.error("Cloud meta sync error:", e); }
   }
   updateUI();
 }
@@ -830,20 +889,43 @@ auth.onAuthStateChanged(async (user) => {
     try {
       const doc = await db.collection("users").doc(user.uid).get();
       if (doc.exists) {
-        store = doc.data();
+        const cloudMeta = doc.data();
+        store = { ...store, ...cloudMeta };
         if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
         if (!store.folders) store.folders = ["General", "Ideas"];
         if (!store.notes) store.notes = [];
-        localStorage.setItem('rq_db', JSON.stringify(store));
-      } else await db.collection("users").doc(user.uid).set(store);
-    } catch (err) { console.error(err); }
+      }
+      await loadCloudLogsUnlimited();
+    } catch (err) { console.error("Auth init error:", err); }
   } else {
     info.innerHTML = `<span>🔒 Guest</span>`;
     btn.innerText = "Login";
+    const cached = await idb.get('rq_store');
+    if (cached) store = cached;
   }
   applyTheme();
   updateUI();
 });
+
+async function loadCloudLogsUnlimited() {
+  if (!currentUser || !db) return;
+  try {
+    const cur = getCur();
+    const snap = await db.collection("users").doc(currentUser.uid)
+      .collection("profiles").doc(store.active)
+      .collection("logs")
+      .orderBy("timestamp", "desc")
+      .limit(500)
+      .get();
+
+    const fetchedLogs = [];
+    snap.forEach(d => fetchedLogs.push(d.data()));
+    if (fetchedLogs.length > 0) {
+      cur.logs = fetchedLogs;
+    }
+    await idb.set('rq_store', store);
+  } catch (err) { console.error("Error loading cloud logs:", err); }
+}
 
 function toggleAuth() {
   if (currentUser) auth.signOut();
@@ -868,17 +950,24 @@ function addProfile() {
     lvls: [{ lvl: 1, title: "Beginner", target: 500 }], pendingQuests: [], logs: []
   };
   store.active = n;
-  persist();
+  persistMeta();
 }
 
-function switchProfile(n) { if (store.profiles[n]) { store.active = n; persist(); } }
+async function switchProfile(n) {
+  if (store.profiles[n]) {
+    store.active = n;
+    await loadCloudLogsUnlimited();
+    persistMeta();
+    updateUI();
+  }
+}
 
 function createFolder() {
   let n = prompt("Folder Name:");
   if (!n || !n.trim() || store.folders.includes(n.trim())) return;
   store.folders.push(n.trim());
   activeFolder = n.trim();
-  persist();
+  persistMeta();
 }
 
 document.getElementById('formNote').onsubmit = (e) => {
@@ -887,14 +976,14 @@ document.getElementById('formNote').onsubmit = (e) => {
   const c = document.getElementById('noteContent').value.trim();
   if (!t || !c) return;
   store.notes.unshift({ id: Date.now(), folder: activeFolder, title: t, content: c, time: getIST().timeString });
-  persist();
+  persistMeta();
   document.getElementById('formNote').reset();
 };
 
 function delNote(id) {
   if (confirm("Delete note?")) {
     store.notes = store.notes.filter(n => n.id !== id);
-    persist();
+    persistMeta();
   }
 }
 
@@ -921,16 +1010,16 @@ document.getElementById('formCategory').onsubmit = (e) => {
   let c = document.getElementById('catInput').value.trim();
   if (!c || store.categories.includes(c)) return;
   store.categories.push(c);
-  persist();
+  persistMeta();
   document.getElementById('catInput').value = '';
 };
 
 function delCat(i) {
   if (store.categories.length <= 1) return alert("Keep at least 1!");
   store.categories.splice(i, 1);
-  persist();
-  }
-  function filterActivities() {
+  persistMeta();
+    }
+    function filterActivities() {
   const q = (document.getElementById('actSearchInput').value || '').toLowerCase();
   const cur = getCur();
   const filtered = cur.acts.filter(a => a.name.toLowerCase().includes(q) || (a.category && a.category.toLowerCase().includes(q)));
@@ -962,7 +1051,7 @@ function renderCharts() {
 
   logs.forEach(l => {
     cum += (l.type === 'Earn' ? l.amt : -l.amt);
-    labels.push(l.timeString ? l.timeString.split('•')[1] : 'Log');
+    labels.push(l.timeString ? (l.timeString.includes('•') ? l.timeString.split('•')[1] : l.timeString) : 'Log');
     data.push(cum);
     const cat = l.category || 'General';
     catDist[cat] = (catDist[cat] || 0) + l.amt;
@@ -1057,7 +1146,7 @@ function renderReports() {
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:4px;">
           <span class="tag" style="margin:0;">🏷️ ${it.category || 'General'}</span>
           <span style="font-size:0.72rem; color:var(--sub); background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:4px;">
-            📦 ${it.qty || 1} ${it.unit || 'Unit'}
+            ${it.unit === 'mins' ? '⏱️' : '📦'} ${it.qty || 1} ${it.unit || 'Unit'}
           </span>
           <span style="font-size:0.72rem; color:var(--sub); margin-left:auto;">
             🕒 ${it.timeString ? (it.timeString.includes('•') ? it.timeString.split('•')[1].trim() : it.timeString) : ''}
@@ -1094,16 +1183,27 @@ function renderManageList() {
     `).join('');
 }
 
-function delLog(i) {
+async function delLog(i) {
   if (!confirm("Are you sure? This recalculates Balance, Streak & Charts.")) return;
   const cur = getCur();
   const it = cur.logs[i];
   if (it.type === 'Earn') cur.balance -= it.amt; else cur.balance += it.amt;
   const dOnly = it.dateOnly;
   const dIso = it.isoDate;
+  const logId = it.id;
+
   cur.logs.splice(i, 1);
   if (it.type === 'Earn') recalcStreakOnDelete(dOnly, dIso);
-  persist();
+
+  if (currentUser && db && logId) {
+    try {
+      await db.collection("users").doc(currentUser.uid)
+        .collection("profiles").doc(store.active)
+        .collection("logs").doc(logId).delete();
+    } catch (e) { console.error("Cloud delete error:", e); }
+  }
+
+  persistMeta();
   renderManageList();
 }
 
@@ -1178,7 +1278,7 @@ function updateUI() {
   document.getElementById('listLevels').innerHTML = cur.lvls.map((l, i) => `
     <div class="item">
       <div><strong>Lvl ${l.lvl}: ${l.title}</strong></div>
-      <div>Target: ₹${l.target} <button class="del" onclick="if(cur.lvls.length>1){cur.lvls.splice(${i},1);persist();}">✕</button></div>
+      <div>Target: ₹${l.target} <button class="del" onclick="if(cur.lvls.length>1){cur.lvls.splice(${i},1);persistMeta();}">✕</button></div>
     </div>
   `).join('');
 
@@ -1204,7 +1304,8 @@ document.getElementById('formLog').onsubmit = (e) => {
   const ist = getIST();
   const prodTag = prodPct < 100 ? ` [${prodPct}% Prod]` : '';
 
-  cur.logs.unshift({
+  const logEntry = {
+    id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     name: `${act.name}${prodTag}`, 
     category: act.category || "General", 
     type: act.type,
@@ -1215,10 +1316,13 @@ document.getElementById('formLog').onsubmit = (e) => {
     dateOnly: ist.dateOnly, 
     timeString: ist.timeString, 
     isoDate: ist.isoDate
-  });
+  };
 
+  cur.logs.unshift(logEntry);
   if (act.type === 'Earn') checkStreak();
-  persist();
+  saveSingleLogUnlimited(logEntry);
+  persistMeta();
+
   document.getElementById('inputDuration').value = '';
   document.getElementById('inputStdProd').value = '100';
   document.getElementById('stdProdDisplay').innerText = '100%';
@@ -1235,7 +1339,7 @@ document.getElementById('formRate').onsubmit = (e) => {
     rate: parseFloat(document.getElementById('rateVal').value),
     unit: document.getElementById('rateUnit').value
   });
-  persist();
+  persistMeta();
   document.getElementById('formRate').reset();
 };
 
@@ -1247,7 +1351,7 @@ document.getElementById('formLevel').onsubmit = (e) => {
     target: parseFloat(document.getElementById('lvlTgt').value),
     title: document.getElementById('lvlTitle').value
   });
-  persist();
+  persistMeta();
   document.getElementById('formLevel').reset();
 };
 
@@ -1255,7 +1359,7 @@ function delRate(i) {
   let cur = getCur();
   if (cur.acts.length <= 1) return alert("Must keep at least 1 rate!");
   cur.acts.splice(i, 1);
-  persist();
+  persistMeta();
 }
   
 applyTheme();
@@ -1263,3 +1367,4 @@ updateUI();
 </script>
 </body>
 </html>
+
