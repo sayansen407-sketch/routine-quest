@@ -393,13 +393,13 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Unlimited Client-Side Storage via IndexedDB
+// Unlimited Client-Side Storage via IndexedDB (With Safe Mirror)
 const idb = {
   dbPromise: null,
   init() {
     if (!this.dbPromise) {
       this.dbPromise = new Promise((resolve, reject) => {
-        const req = indexedDB.open("RoutineQuestUnlimitedDB", 2);
+        const req = indexedDB.open("RoutineQuestUnlimitedDB", 3);
         req.onupgradeneeded = (e) => {
           const d = e.target.result;
           if (!d.objectStoreNames.contains("app_state")) d.createObjectStore("app_state");
@@ -837,9 +837,10 @@ function confirmQuestReward(qId) {
   updateUI();
 }
 
-// Dual-Sync Log Persistence: Saves to IndexedDB and Firestore Sub-collection
+// Dual-Mirror Log Persistence: Guarantees Logs Stay in IndexedDB & LocalStorage Forever
 async function saveSingleLogEverywhere(logItem) {
   await idb.set('rq_store', store);
+  try { localStorage.setItem('rq_backup_logs', JSON.stringify(getCur().logs)); } catch(e) {}
   if (currentUser && db) {
     try {
       await db.collection("users").doc(currentUser.uid)
@@ -897,7 +898,7 @@ function checkMidnightTransition() {
   const currentIso = getNowTZ().isoDate;
   if (currentIso !== lastCheckedDateIso) {
     lastCheckedDateIso = currentIso;
-    updateUI(); // Resets Today's list to empty automatically while keeping reports & manage logs intact
+    updateUI(); // Resets Today's logs view automatically while reports & manage logs remain intact
   }
 }
 setInterval(checkMidnightTransition, 10000);
@@ -925,6 +926,11 @@ function changeDailyTarget() {
 
 async function persistMeta() {
   await idb.set('rq_store', store);
+  try {
+    localStorage.setItem('rq_local_logs_' + store.active, JSON.stringify(getCur().logs || []));
+    localStorage.setItem('rq_store_backup', JSON.stringify(store));
+  } catch(e) {}
+
   if (currentUser && db) {
     try {
       const clone = JSON.parse(JSON.stringify(store));
@@ -937,7 +943,7 @@ async function persistMeta() {
   updateUI();
 }
 
-// Initial App Boot: Guarantees Logs & Timezone Are Always Restored
+// Initial App Boot: Restores Logs Safely From Local DB
 async function initializeAppStorage() {
   const cached = await idb.get('rq_store');
   if (cached) {
@@ -945,7 +951,23 @@ async function initializeAppStorage() {
     if (store.timezone) {
       selectedTimezone = store.timezone;
     }
+  } else {
+    try {
+      const bk = localStorage.getItem('rq_store_backup');
+      if (bk) store = JSON.parse(bk);
+    } catch(e) {}
   }
+
+  // Restore local logs mirror to prevent empty array wipe
+  if (store.profiles && store.profiles[store.active]) {
+    try {
+      const localLogs = JSON.parse(localStorage.getItem('rq_local_logs_' + store.active) || '[]');
+      if (localLogs.length > 0 && (!store.profiles[store.active].logs || store.profiles[store.active].logs.length === 0)) {
+        store.profiles[store.active].logs = localLogs;
+      }
+    } catch(e) {}
+  }
+
   const tzSelect = document.getElementById('userTimezoneSelect');
   if (tzSelect) tzSelect.value = selectedTimezone;
   updateLiveClock();
@@ -965,6 +987,15 @@ auth.onAuthStateChanged(async (user) => {
       const doc = await db.collection("users").doc(user.uid).get();
       if (doc.exists) {
         const cloudMeta = doc.data();
+        // CRITICAL BUGFIX: Never overwrite local logs with empty cloud logs array
+        if (cloudMeta.profiles) {
+          Object.keys(cloudMeta.profiles).forEach(pk => {
+            const currentLogs = (store.profiles[pk] && store.profiles[pk].logs && store.profiles[pk].logs.length)
+              ? store.profiles[pk].logs
+              : JSON.parse(localStorage.getItem('rq_local_logs_' + pk) || '[]');
+            cloudMeta.profiles[pk].logs = currentLogs;
+          });
+        }
         store = { ...store, ...cloudMeta };
         if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
         if (!store.folders) store.folders = ["General", "Ideas"];
@@ -980,8 +1011,6 @@ auth.onAuthStateChanged(async (user) => {
   } else {
     info.innerHTML = `<span>🔒 Guest</span>`;
     btn.innerText = "Login";
-    const cached = await idb.get('rq_store');
-    if (cached) store = cached;
   }
   applyTheme();
   updateUI();
@@ -1001,9 +1030,16 @@ async function loadCloudLogsUnlimited() {
     const fetchedLogs = [];
     snap.forEach(d => fetchedLogs.push(d.data()));
     if (fetchedLogs.length > 0) {
-      cur.logs = fetchedLogs;
+      const map = new Map();
+      fetchedLogs.forEach(l => map.set(l.id, l));
+      (cur.logs || []).forEach(l => {
+        if (!map.has(l.id)) map.set(l.id, l);
+      });
+      cur.logs = Array.from(map.values()).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
     await idb.set('rq_store', store);
+    try { localStorage.setItem('rq_local_logs_' + store.active, JSON.stringify(cur.logs)); } catch(e) {}
+    updateUI();
   } catch (err) { console.error("Error loading cloud logs:", err); }
 }
 
