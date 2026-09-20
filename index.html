@@ -39,7 +39,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
   body { background: var(--bg); color: var(--text); padding: 16px 14px; max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; transition: all 0.35s ease; letter-spacing: -0.2px; }
 
-  .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; position: relative; }
+  .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; position: relative; }
   .menu-btn { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); color: var(--primary); font-size: 1.25rem; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: transform 0.15s, border-color 0.2s; }
   .menu-btn:active { transform: scale(0.92); border-color: var(--primary); }
   
@@ -53,6 +53,10 @@
   .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
   .user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
   .auth-btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: #070d19; font-weight: 900; font-size: 0.75rem; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 10px var(--primary-glow); }
+
+  /* World Clock Bar */
+  .clock-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.6); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; font-size: 0.76rem; color: var(--sub); }
+  .clock-bar select { background: transparent; border: none; color: var(--primary); font-size: 0.76rem; font-weight: 700; outline: none; cursor: pointer; width: auto; padding: 0; margin: 0; }
 
   .bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); backdrop-filter: blur(20px); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
   .bar select { background: transparent; border: none; color: var(--primary); font-size: 0.95rem; font-weight: 800; outline: none; cursor: pointer; }
@@ -128,6 +132,23 @@
     <div class="user-info" id="userInfo"><span>🔒 Guest</span></div>
     <button class="auth-btn" id="authBtn" onclick="toggleAuth()">Login</button>
   </div>
+</div>
+
+<!-- World Clock & Live Time Display -->
+<div class="clock-bar">
+  <span>🌐 Timezone: 
+    <select id="userTimezoneSelect" onchange="changeTimezone(this.value)">
+      <option value="Asia/Kolkata">🇮🇳 India (IST)</option>
+      <option value="UTC">🌍 UTC (GMT)</option>
+      <option value="America/New_York">🇺🇸 New York (EST)</option>
+      <option value="America/Los_Angeles">🇺🇸 Los Angeles (PST)</option>
+      <option value="Europe/London">🇬🇧 London (BST)</option>
+      <option value="Asia/Dubai">🇦🇪 Dubai (GST)</option>
+      <option value="Asia/Tokyo">🇯🇵 Tokyo (JST)</option>
+      <option value="Asia/Dhaka">🇧🇩 Bangladesh (BST)</option>
+    </select>
+  </span>
+  <b id="liveClockDisplay" style="color:var(--text);">--:--</b>
 </div>
 
 <div class="bar">
@@ -222,7 +243,11 @@
     <div class="list" id="listPendingQuests"></div>
   </div>
 
-  <h4 style="margin-top:14px; font-size:0.88rem; color:var(--sub);">Recent Logs (Protected)</h4>
+  <!-- Today's Logs (Midnight Auto-Reset) -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; margin-bottom:4px;">
+    <h4 style="font-size:0.88rem; color:var(--sub);">Today's Logs</h4>
+    <span style="font-size:0.7rem; color:var(--primary); font-weight:700;">Resets at 12:00 AM</span>
+  </div>
   <div class="list" id="listHistory"></div>
 </div>
 
@@ -242,10 +267,10 @@
   <div class="chart-box" style="height:150px;"><canvas id="categoryChart"></canvas></div>
 </div>
 
-<!-- Tab 3: Report -->
+<!-- Tab 3: Report (All Days Historical Archive) -->
 <div id="tabReport" class="tab card">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
-    <h4 style="font-size:0.9rem;">Daily Activity Breakdown</h4>
+    <h4 style="font-size:0.9rem;">Daily Activity Archive</h4>
     <input type="date" id="reportDateFilter" onchange="renderReports()" style="width:auto; margin:0; padding:4px 8px; font-size:0.75rem;">
   </div>
   <div id="reportList" class="list" style="max-height:380px;"></div>
@@ -324,10 +349,10 @@
 <div class="modal" id="manageModal">
   <div class="modal-body">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h4>Manage & Delete Logs</h4>
+      <h4>Manage & Lifetime Logs</h4>
       <button class="target-btn" onclick="closeModal('manageModal')">✕</button>
     </div>
-    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:10px;">Safe Delete: Recalculates Net Balance, Streak progress, and Charts automatically.</p>
+    <p style="font-size:0.75rem; color:var(--sub); margin-bottom:10px;">All historical records stored here forever. Safe delete recalculates balance and streaks.</p>
     <div class="list" id="manageLogsList"></div>
   </div>
 </div>
@@ -374,7 +399,7 @@ const idb = {
   init() {
     if (!this.dbPromise) {
       this.dbPromise = new Promise((resolve, reject) => {
-        const req = indexedDB.open("RoutineQuestUnlimitedDB", 1);
+        const req = indexedDB.open("RoutineQuestUnlimitedDB", 2);
         req.onupgradeneeded = (e) => {
           const d = e.target.result;
           if (!d.objectStoreNames.contains("app_state")) d.createObjectStore("app_state");
@@ -417,6 +442,7 @@ let chartFilter = '1W';
 let activeFolder = "General";
 let activeActMode = "standard";
 let currentQuestScheduleType = 'time';
+let selectedTimezone = localStorage.getItem('rq_timezone') || 'Asia/Kolkata';
 
 let store = {
   active: "Default",
@@ -446,6 +472,30 @@ let store = {
     }
   }
 };
+
+// World Clock & Timezone Engine
+function getNowTZ() {
+  const now = new Date();
+  const tz = selectedTimezone || 'Asia/Kolkata';
+  const dateOnly = now.toLocaleDateString('en-IN', { timeZone: tz, day: '2-digit', month: 'short', year: 'numeric' });
+  const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
+  const isoDate = now.toLocaleDateString('en-CA', { timeZone: tz });
+  return { dateOnly, timeOnly, timeString: `${dateOnly} • ${timeOnly}`, isoDate };
+}
+
+function updateLiveClock() {
+  const tzNow = getNowTZ();
+  const clkEl = document.getElementById('liveClockDisplay');
+  if (clkEl) clkEl.innerText = `${tzNow.timeOnly} (${tzNow.dateOnly})`;
+}
+setInterval(updateLiveClock, 1000);
+
+function changeTimezone(tz) {
+  selectedTimezone = tz;
+  localStorage.setItem('rq_timezone', tz);
+  updateLiveClock();
+  updateUI();
+}
 
 function getCur() {
   if (!store.profiles || typeof store.profiles !== 'object') {
@@ -600,8 +650,7 @@ function handleTimeboundSubmit(e) {
     document.getElementById('questUntimedQty').value = '1';
   }
   updateQuestEstimatedPayout();
-}
-    function failQuest(id) {
+}function failQuest(id) {
   const cur = getCur();
   const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
   if (qIndex === -1) return;
@@ -610,7 +659,7 @@ function handleTimeboundSubmit(e) {
   if (!confirm(`Mark "${q.name}" as Failed? ₹${q.estimatedAmt.toFixed(1)} will be deducted.`)) return;
 
   cur.balance -= q.estimatedAmt;
-  const ist = getIST();
+  const tzNow = getNowTZ();
   const logEntry = {
     id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     name: `${q.name} (Missed Task)`,
@@ -620,14 +669,14 @@ function handleTimeboundSubmit(e) {
     qty: q.qty || 1,
     unit: q.unit || 'Task',
     timestamp: Date.now(),
-    dateOnly: ist.dateOnly,
-    timeString: ist.timeString,
-    isoDate: ist.isoDate
+    dateOnly: tzNow.dateOnly,
+    timeString: tzNow.timeString,
+    isoDate: tzNow.isoDate
   };
 
   cur.logs.unshift(logEntry);
   cur.pendingQuests.splice(qIndex, 1);
-  saveSingleLogUnlimited(logEntry);
+  saveSingleLogEverywhere(logEntry);
   persistMeta();
   updateUI();
 }
@@ -664,7 +713,7 @@ function reviewQuest(id) {
   modalBody.innerHTML = `
     <p style="font-size:0.85rem; margin-bottom:12px;">
       <strong>Task:</strong> ${q.name} 
-      <span class="tag">${isTimed ? `🕒 ${q.startTime} - ${q.endTime}` : `📋 Task/Event`}</span>
+      <span class="tag">${isTimed ? `🕒 ${q.startTime} -${q.endTime}` : `📋 Task/Event`}</span>
     </p>
     
     ${durationSectionHtml}
@@ -751,7 +800,7 @@ function confirmQuestReward(qId) {
   if (q.type === 'Earn') cur.balance += earnedAmt;
   else cur.balance -= earnedAmt;
 
-  const ist = getIST();
+  const tzNow = getNowTZ();
   const prodTag = window.curVerifyingQuest.prodPct < 100 ? ` [${window.curVerifyingQuest.prodPct}% Prod]` : '';
   const isTimed = q.scheduleType !== 'untimed';
   const durTag = (isTimed && window.curVerifyingQuest.durationType === 'partial') ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
@@ -768,9 +817,9 @@ function confirmQuestReward(qId) {
     qty: displayQty,
     unit: displayUnit,
     timestamp: Date.now(),
-    dateOnly: ist.dateOnly,
-    timeString: ist.timeString,
-    isoDate: ist.isoDate
+    dateOnly: tzNow.dateOnly,
+    timeString: tzNow.timeString,
+    isoDate: tzNow.isoDate
   };
 
   cur.logs.unshift(logEntry);
@@ -778,38 +827,31 @@ function confirmQuestReward(qId) {
 
   cur.pendingQuests.splice(qIndex, 1);
   closeModal('questVerifyModal');
-  saveSingleLogUnlimited(logEntry);
+  saveSingleLogEverywhere(logEntry);
   persistMeta();
   updateUI();
 }
 
-// Unlimited Sub-collection Firestore Writer
-async function saveSingleLogUnlimited(logItem) {
+// Dual-Sync Log Persistence: Saves to IndexedDB and Firestore Sub-collection
+async function saveSingleLogEverywhere(logItem) {
+  await idb.set('rq_store', store);
   if (currentUser && db) {
     try {
       await db.collection("users").doc(currentUser.uid)
         .collection("profiles").doc(store.active)
         .collection("logs").doc(logItem.id).set(logItem);
-    } catch (e) { console.error("Cloud log sync error:", e); }
+    } catch (e) { console.error("Cloud sub-collection sync error:", e); }
   }
     }
-    function getIST() {
-  const now = new Date();
-  const dateOnly = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
-  const timeOnly = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
-  const isoDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-  return { dateOnly, timeString: `${dateOnly} • ${timeOnly}`, isoDate };
-}
-
-function getTodayEarned() {
+    function getTodayEarned() {
   const cur = getCur();
-  const today = getIST().dateOnly;
+  const today = getNowTZ().dateOnly;
   return (cur.logs || []).filter(l => l.dateOnly === today && l.type === 'Earn').reduce((s, l) => s + l.amt, 0);
 }
 
 function checkStreak() {
   const cur = getCur();
-  const todayIso = getIST().isoDate;
+  const todayIso = getNowTZ().isoDate;
   if (getTodayEarned() >= cur.dailyTarget) {
     if (cur.lastActiveDate !== todayIso) {
       if (!cur.lastActiveDate) cur.streak = 1;
@@ -826,7 +868,7 @@ function checkStreak() {
 
 function recalcStreakOnDelete(dOnly, dIso) {
   const cur = getCur();
-  const iso = dIso || getIST().isoDate;
+  const iso = dIso || getNowTZ().isoDate;
   const dayEarn = (cur.logs || []).filter(l => (l.dateOnly === dOnly || l.isoDate === iso) && l.type === 'Earn').reduce((s, l) => s + l.amt, 0);
   if (dayEarn < cur.dailyTarget) {
     delete cur.streakHistory[iso];
@@ -843,6 +885,17 @@ function recalcStreakOnDelete(dOnly, dIso) {
     }
   }
 }
+
+// Check for Midnight Day Transition Every 10 Seconds
+let lastCheckedDateIso = getNowTZ().isoDate;
+function checkMidnightTransition() {
+  const currentIso = getNowTZ().isoDate;
+  if (currentIso !== lastCheckedDateIso) {
+    lastCheckedDateIso = currentIso;
+    updateUI(); // Resets Today's list to empty automatically while keeping reports & manage logs intact
+  }
+}
+setInterval(checkMidnightTransition, 10000);
 
 function getLeaderboard() {
   const cur = getCur();
@@ -878,6 +931,22 @@ async function persistMeta() {
   }
   updateUI();
 }
+
+// Initial App Boot: Guarantees Logs Are Always Restored
+async function initializeAppStorage() {
+  const cached = await idb.get('rq_store');
+  if (cached) {
+    store = cached;
+    if (store.timezone) {
+      selectedTimezone = store.timezone;
+      document.getElementById('userTimezoneSelect').value = selectedTimezone;
+    }
+  }
+  updateLiveClock();
+  applyTheme();
+  updateUI();
+}
+initializeAppStorage();
 
 auth.onAuthStateChanged(async (user) => {
   currentUser = user;
@@ -915,7 +984,7 @@ async function loadCloudLogsUnlimited() {
       .collection("profiles").doc(store.active)
       .collection("logs")
       .orderBy("timestamp", "desc")
-      .limit(500)
+      .limit(1000)
       .get();
 
     const fetchedLogs = [];
@@ -975,7 +1044,7 @@ document.getElementById('formNote').onsubmit = (e) => {
   const t = document.getElementById('noteTitle').value.trim();
   const c = document.getElementById('noteContent').value.trim();
   if (!t || !c) return;
-  store.notes.unshift({ id: Date.now(), folder: activeFolder, title: t, content: c, time: getIST().timeString });
+  store.notes.unshift({ id: Date.now(), folder: activeFolder, title: t, content: c, time: getNowTZ().timeString });
   persistMeta();
   document.getElementById('formNote').reset();
 };
@@ -1171,7 +1240,7 @@ function renderReports() {
 
 function renderManageList() {
   const cur = getCur();
-  document.getElementById('manageLogsList').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No records.</p>' :
+  document.getElementById('manageLogsList').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No lifetime records found.</p>' :
     cur.logs.map((h, i) => `
       <div class="item">
         <div><strong>${h.name}</strong> <small style="color:var(--sub);">(${h.timeString})</small></div>
@@ -1209,6 +1278,8 @@ async function delLog(i) {
 
 function updateUI() {
   const cur = getCur();
+  const tzNow = getNowTZ();
+
   document.getElementById('saveSelector').innerHTML = Object.keys(store.profiles).map(k => `<option value="${k}" ${k===store.active?'selected':''}>📂 ${k}</option>`).join('');
   document.getElementById('walletBalance').innerText = `₹ ${cur.balance.toFixed(2)}`;
   document.getElementById('streakBadge').innerText = `🔥 ${cur.streak || 0} Days`;
@@ -1241,7 +1312,7 @@ function updateUI() {
       <div class="item">
         <div>
           <strong>${q.name}</strong> 
-          <span class="tag">${q.scheduleType === 'untimed' ? '📋 Task/Event' : `🕒 ${q.startTime} - ${q.endTime}`}</span>
+          <span class="tag">${q.scheduleType === 'untimed' ? '📋 Task/Event' : `🕒 ${q.startTime} -${q.endTime}`}</span>
           <br><small style="color:var(--sub);">Est: ₹${q.estimatedAmt.toFixed(1)}${q.qty ? ` | Qty: ${q.qty}` : ''}</small>
         </div>
         <div style="display:flex; gap:6px;">
@@ -1254,10 +1325,12 @@ function updateUI() {
     pqList.innerHTML = '<p style="color:var(--sub);font-size:0.75rem;">No active quests scheduled.</p>';
   }
 
-  document.getElementById('listHistory').innerHTML = !cur.logs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No activity.</p>' :
-    cur.logs.slice(0, 10).map(h => `
+  // Today's Activity Logs Only (Resets at 12:00 AM automatically)
+  const todayLogs = (cur.logs || []).filter(h => h.dateOnly === tzNow.dateOnly);
+  document.getElementById('listHistory').innerHTML = !todayLogs.length ? '<p style="color:var(--sub);font-size:0.75rem;">No logs recorded today yet.</p>' :
+    todayLogs.slice(0, 15).map(h => `
       <div class="item">
-        <div><strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span> <small style="color:var(--sub);">(${h.timeString})</small></div>
+        <div><strong>${h.name}</strong><span class="tag">${h.category || 'General'}</span> <small style="color:var(--sub);">(${h.timeString ? (h.timeString.includes('•') ? h.timeString.split('•')[1] : h.timeString) : ''})</small></div>
         <span class="${h.type==='Earn'?'earn':'spend'}">${h.type==='Earn'?'+':'-'}₹${h.amt.toFixed(1)}</span>
       </div>
     `).join('');
@@ -1301,7 +1374,7 @@ document.getElementById('formLog').onsubmit = (e) => {
   if (act.type === 'Earn') cur.balance += finalTotal; 
   else cur.balance -= finalTotal;
 
-  const ist = getIST();
+  const tzNow = getNowTZ();
   const prodTag = prodPct < 100 ? ` [${prodPct}% Prod]` : '';
 
   const logEntry = {
@@ -1313,14 +1386,14 @@ document.getElementById('formLog').onsubmit = (e) => {
     qty, 
     unit: act.unit, 
     timestamp: Date.now(),
-    dateOnly: ist.dateOnly, 
-    timeString: ist.timeString, 
-    isoDate: ist.isoDate
+    dateOnly: tzNow.dateOnly, 
+    timeString: tzNow.timeString, 
+    isoDate: tzNow.isoDate
   };
 
   cur.logs.unshift(logEntry);
   if (act.type === 'Earn') checkStreak();
-  saveSingleLogUnlimited(logEntry);
+  saveSingleLogEverywhere(logEntry);
   persistMeta();
 
   document.getElementById('inputDuration').value = '';
@@ -1368,3 +1441,4 @@ updateUI();
 </body>
 </html>
 
+    
