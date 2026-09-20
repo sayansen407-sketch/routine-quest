@@ -493,6 +493,8 @@ setInterval(updateLiveClock, 1000);
 function changeTimezone(tz) {
   selectedTimezone = tz;
   localStorage.setItem('rq_timezone', tz);
+  store.timezone = tz;
+  persistMeta();
   updateLiveClock();
   updateUI();
 }
@@ -650,7 +652,8 @@ function handleTimeboundSubmit(e) {
     document.getElementById('questUntimedQty').value = '1';
   }
   updateQuestEstimatedPayout();
-}function failQuest(id) {
+}
+    function failQuest(id) {
   const cur = getCur();
   const qIndex = cur.pendingQuests.findIndex(q => q.id === id);
   if (qIndex === -1) return;
@@ -691,15 +694,16 @@ function reviewQuest(id) {
 
   let durationSectionHtml = '';
   if (isTimed) {
+    const totalMins = q.totalMinutes || 1;
     durationSectionHtml = `
       <label style="font-size:0.8rem; color:var(--sub); font-weight:700;">1. Duration Completion:</label>
       <div style="display:flex; gap:8px; margin:6px 0 12px;">
-        <button type="button" id="btnDurFull" class="filter-btn active" onclick="setVerifyDurationType('full', ${q.id})">Full Time (${q.totalMinutes}m)</button>
+        <button type="button" id="btnDurFull" class="filter-btn active" onclick="setVerifyDurationType('full', ${q.id})">Full Time (${totalMins}m)</button>
         <button type="button" id="btnDurPartial" class="filter-btn" onclick="setVerifyDurationType('partial', ${q.id})">Partial Time</button>
       </div>
       <div id="partialInputBox" style="display:none; margin-bottom:12px;">
         <label style="font-size:0.75rem; color:var(--sub);">Actual Minutes Spent:</label>
-        <input type="number" id="verifyActualMinutes" value="${Math.round(q.totalMinutes / 2)}" min="1" max="${q.totalMinutes}" oninput="calcVerifyPreview(${q.id})">
+        <input type="number" id="verifyActualMinutes" value="${Math.round(totalMins / 2) || 1}" min="1" max="${totalMins}" oninput="calcVerifyPreview(${q.id})">
       </div>
     `;
   } else {
@@ -739,7 +743,7 @@ function reviewQuest(id) {
     isTimed: isTimed,
     durationType: 'full',
     prodPct: 100,
-    actualMinutes: q.totalMinutes || 0
+    actualMinutes: q.totalMinutes || 1
   };
 
   openModal('questVerifyModal');
@@ -767,7 +771,8 @@ function calcVerifyPreview(qId) {
   let baseAmt = q.estimatedAmt;
 
   if (q.scheduleType !== 'untimed') {
-    let mins = q.totalMinutes;
+    const totalMins = q.totalMinutes || 1;
+    let mins = totalMins;
     if (window.curVerifyingQuest.durationType === 'partial') {
       mins = parseFloat(document.getElementById('verifyActualMinutes').value) || 1;
     }
@@ -777,7 +782,7 @@ function calcVerifyPreview(qId) {
     if (q.unit === '1 Hr') units = mins / 60;
     else if (q.unit === '1 Day') units = mins / (24 * 60);
     else if (q.unit === '1 Week') units = mins / (7 * 24 * 60);
-    else if (q.unit === 'Task' || q.unit === 'Event') units = mins / q.totalMinutes;
+    else if (q.unit === 'Task' || q.unit === 'Event') units = mins / totalMins;
     baseAmt = q.rate * units;
   }
 
@@ -805,7 +810,7 @@ function confirmQuestReward(qId) {
   const isTimed = q.scheduleType !== 'untimed';
   const durTag = (isTimed && window.curVerifyingQuest.durationType === 'partial') ? ` (${window.curVerifyingQuest.actualMinutes}m)` : '';
 
-  const displayQty = isTimed ? (window.curVerifyingQuest.durationType === 'partial' ? window.curVerifyingQuest.actualMinutes : q.totalMinutes) : (q.qty || 1);
+  const displayQty = isTimed ? (window.curVerifyingQuest.durationType === 'partial' ? window.curVerifyingQuest.actualMinutes : (q.totalMinutes || 1)) : (q.qty || 1);
   const displayUnit = isTimed ? 'mins' : (q.unit || 'Task');
 
   const logEntry = {
@@ -932,16 +937,17 @@ async function persistMeta() {
   updateUI();
 }
 
-// Initial App Boot: Guarantees Logs Are Always Restored
+// Initial App Boot: Guarantees Logs & Timezone Are Always Restored
 async function initializeAppStorage() {
   const cached = await idb.get('rq_store');
   if (cached) {
     store = cached;
     if (store.timezone) {
       selectedTimezone = store.timezone;
-      document.getElementById('userTimezoneSelect').value = selectedTimezone;
     }
   }
+  const tzSelect = document.getElementById('userTimezoneSelect');
+  if (tzSelect) tzSelect.value = selectedTimezone;
   updateLiveClock();
   applyTheme();
   updateUI();
@@ -963,6 +969,11 @@ auth.onAuthStateChanged(async (user) => {
         if (!store.categories) store.categories = ["General", "Study", "Fitness", "Work", "Distraction"];
         if (!store.folders) store.folders = ["General", "Ideas"];
         if (!store.notes) store.notes = [];
+        if (store.timezone) {
+          selectedTimezone = store.timezone;
+          const tzSelect = document.getElementById('userTimezoneSelect');
+          if (tzSelect) tzSelect.value = selectedTimezone;
+        }
       }
       await loadCloudLogsUnlimited();
     } catch (err) { console.error("Auth init error:", err); }
@@ -1441,4 +1452,3 @@ updateUI();
 </body>
 </html>
 
-    
